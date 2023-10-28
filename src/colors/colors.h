@@ -29,4 +29,7 @@ Color color_from_hsl(float h, float s, float l);
 Color color_fade(Color color, double fade);
 Color color_shift(Color color, int shift);
 
+//gotta test color functions
+//next ui element is textbox
+
 #endif
