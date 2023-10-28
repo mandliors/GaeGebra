@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "sdl_ttf.h": "c",
+        "sdl.h": "c",
+        "sdl_main.h": "c",
+        "ui_constraints.h": "c",
+        "ui_elements.h": "c",
+        "renderer.h": "c",
+        "app.h": "c"
+    },
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
+}

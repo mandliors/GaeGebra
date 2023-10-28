@@ -1,0 +1,5 @@
+/home/progmaster/Desktop/prog/coordinate_geometry/build/CMakeFiles/coordinate_geometry.dir
+/home/progmaster/Desktop/prog/coordinate_geometry/build/CMakeFiles/package.dir
+/home/progmaster/Desktop/prog/coordinate_geometry/build/CMakeFiles/package_source.dir
+/home/progmaster/Desktop/prog/coordinate_geometry/build/CMakeFiles/edit_cache.dir
+/home/progmaster/Desktop/prog/coordinate_geometry/build/CMakeFiles/rebuild_cache.dir
