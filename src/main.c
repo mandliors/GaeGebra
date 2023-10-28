@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     Window* window2 = window_create("Test2", 400, 300, 0); window_hide(window2);
     app_set_target_fps(FPS);
 
-    Font* font = font_load("assets/lucida.ttf", 20);
+    Font* font = font_load("../assets/lucida.ttf", 20);
     renderer_set_default_font(font);
 
     renderer_set_target(window2->renderer);
