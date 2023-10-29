@@ -23,9 +23,13 @@ UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
     element->destroy = _ui_container_destroy;
 
     container->children = vector_create(0);
+    if (parent != NULL && parent->children->size > 0)
+        container->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        container->base.recalculate(NULL, element);
+
     if (parent)
         vector_push_back(parent->children, element);
-    container->base.recalculate(element);
 
     return container;
 }
@@ -49,9 +53,13 @@ UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color c
     panel->border_width = border_width;
     panel->corner_radius = roundness;
 
+    if (parent->children->size > 0)
+        panel->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        panel->base.recalculate(NULL, element);
+    
     if (parent)
         vector_push_back(parent->children, element);
-    panel->base.recalculate(element);
 
     return panel;
 }
@@ -73,9 +81,13 @@ UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const c
     strcpy(label->text, text);
     label->color = color;
 
+    if (parent->children->size > 0)
+        label->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        label->base.recalculate(NULL, element);
+
     if (parent)
-        vector_push_back(parent->children, element);
-    label->base.recalculate(element);
+        vector_push_back(parent->children, element);  
 
     return label;
 }
@@ -101,9 +113,13 @@ UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const
     button->mouse_state = MS_NONE;
     button->on_click = on_click;
 
+    if (parent->children->size > 0)
+        button->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        button->base.recalculate(NULL, element);
+
     if (parent)
         vector_push_back(parent->children, element);
-    button->base.recalculate(element);
     
     return button;
 }
@@ -128,9 +144,13 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
     textbox->focused = false;
     textbox->mouse_state = MS_NONE;
 
+    if (parent->children->size > 0)
+        textbox->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        textbox->base.recalculate(NULL, element);
+
     if (parent)
         vector_push_back(parent->children, element);
-    textbox->base.recalculate(element);
     
     return textbox;
 }
@@ -154,9 +174,13 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
     checkbox->border_color = (Color){(checkbox->unchecked_color.r + 128) % 256, (checkbox->unchecked_color.g + 128) % 256, (checkbox->unchecked_color.b + 128) % 256, 255};
     checkbox->corner_radius = 2;
 
+    if (parent->children->size > 0)
+        checkbox->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        checkbox->base.recalculate(NULL, element);
+
     if (parent)
         vector_push_back(parent->children, element);
-    checkbox->base.recalculate(element);
     
     return checkbox;
 }
@@ -181,9 +205,13 @@ UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, doubl
     slider->corner_radius = 1;
     slider->mouse_state = MS_NONE;
 
+    if (parent->children->size > 0)
+        slider->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        slider->base.recalculate(NULL, element);
+
     if (parent)
         vector_push_back(parent->children, element);
-    slider->base.recalculate(element);
     
     return slider;
 }
@@ -197,7 +225,7 @@ void _ui_container_update(UIElement* self)
         child->update(child);
     }
 }
-void _ui_container_recalculate(UIElement* self)
+void _ui_container_recalculate(UIElement* sibling, UIElement* self)
 {
     if (self->parent != NULL)
     {
@@ -213,10 +241,14 @@ void _ui_container_recalculate(UIElement* self)
 
         //recalculate position
         self->position.x = __ui_calculate_position (self->constraints.x,
+                                                    sibling == NULL ? -1 : sibling->position.x,
+                                                    sibling == NULL ? -1 : sibling->size.x,
                                                     self->parent->position.x,
                                                     self->parent->size.x,
                                                     self->size.x);
         self->position.y = __ui_calculate_position (self->constraints.y,
+                                                    sibling == NULL ? -1 : sibling->position.y,
+                                                    sibling == NULL ? -1 : sibling->size.y,
                                                     self->parent->position.y,
                                                     self->parent->size.y,
                                                     self->size.y);
@@ -224,10 +256,16 @@ void _ui_container_recalculate(UIElement* self)
             SDL_Log("invalid constraint type for container position");
     }
     UIContainer* container = (UIContainer*)self;
-    for (size_t i = 0; i < container->children->size; i++)
+    if (container->children->size > 0)
     {
-        UIElement* child = (UIElement*)vector_get(container->children, i);
-        child->recalculate(child);
+        UIElement* child = (UIElement*)vector_get(container->children, 0);
+        child->recalculate(NULL, child);
+        for (int i = 1; i < container->children->size; i++)
+        {
+            UIElement* child = (UIElement*)vector_get(container->children, i);
+            UIElement* sibling = (UIElement*)vector_get(container->children, i - 1);
+            child->recalculate(sibling, child);
+        }
     }
 }
 void _ui_container_render(UIElement* self)
@@ -253,9 +291,9 @@ void _ui_container_destroy(UIElement* self)
 }
 
 void _ui_panel_update(UIElement* self) { }
-void _ui_panel_recalculate(UIElement* self)
+void _ui_panel_recalculate(UIElement* sibling, UIElement* self)
 {
-    __ui_element_recalculate(self);
+    __ui_element_recalculate(sibling, self);
 }
 void _ui_panel_render(UIElement* self)
 {
@@ -272,7 +310,7 @@ void _ui_panel_destroy(UIElement* self)
 }
 
 void _ui_label_update(UIElement* self) { }
-void _ui_label_recalculate(UIElement* self)
+void _ui_label_recalculate(UIElement* sibling, UIElement* self)
 {
     //recalculate size
     UILabel* label = (UILabel*)self;
@@ -280,10 +318,14 @@ void _ui_label_recalculate(UIElement* self)
 
     //recalculate position
     self->position.x = __ui_calculate_position (self->constraints.x,
+                                                sibling == NULL ? -1 : sibling->position.x,
+                                                sibling == NULL ? -1 : sibling->size.x,
                                                 self->parent->position.x,
                                                 self->parent->size.x,
                                                 self->size.x);
     self->position.y = __ui_calculate_position (self->constraints.y,
+                                                sibling->position.y,
+                                                sibling->size.y,
                                                 self->parent->position.y,
                                                 self->parent->size.y,
                                                 self->size.y);
@@ -325,9 +367,9 @@ void _ui_button_update(UIElement* self)
     else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         button->mouse_state = MS_NONE;
 }
-void _ui_button_recalculate(UIElement* self)
+void _ui_button_recalculate(UIElement* sibling, UIElement* self)
 {
-    __ui_element_recalculate(self);
+    __ui_element_recalculate(sibling, self);
     
     UIButton* button = (UIButton*)self;
     Vector2 text_size = renderer_query_text_size(button->text);
@@ -420,9 +462,9 @@ void _ui_textbox_update(UIElement* self)
     else if (textbox->mouse_state != MS_PRESS || input_is_mouse_button_released(SDL_BUTTON_LEFT))
         textbox->mouse_state = MS_NONE;
 }
-void _ui_textbox_recalculate(UIElement* self)
+void _ui_textbox_recalculate(UIElement* sibling, UIElement* self)
 {
-    __ui_element_recalculate(self);
+    __ui_element_recalculate(sibling, self);
 }
 void _ui_textbox_render(UIElement* self)
 {
@@ -461,9 +503,9 @@ void _ui_checkbox_update(UIElement* self)
     else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         checkbox->mouse_state = MS_NONE;
 }
-void _ui_checkbox_recalculate(UIElement* self)
+void _ui_checkbox_recalculate(UIElement* sibling, UIElement* self)
 {
-    __ui_element_recalculate(self);
+    __ui_element_recalculate(sibling, self);
 }
 void _ui_checkbox_render(UIElement* self)
 {
@@ -516,9 +558,9 @@ void _ui_slider_update(UIElement* self)
     if (slider->mouse_state == MS_PRESS)
         slider->value = clamp((input_get_mouse_position().x - self->position.x) / (double)self->size.x, 0.0, 1.0);
 }
-void _ui_slider_recalculate(UIElement* self)
+void _ui_slider_recalculate(UIElement* sibling, UIElement* self)
 {
-    __ui_element_recalculate(self);
+    __ui_element_recalculate(sibling, self);
 }
 void _ui_slider_render(UIElement* self)
 {
@@ -535,7 +577,7 @@ void _ui_slider_destroy(UIElement* self)
     free(slider);
 }
 
-void __ui_element_recalculate(UIElement* element)
+void __ui_element_recalculate(UIElement* sibling, UIElement* element)
 {
     //recalculate size
     element->size.x = __ui_calculate_size(element->constraints.width, element->parent->size.x);
@@ -549,10 +591,14 @@ void __ui_element_recalculate(UIElement* element)
 
     //recalculate position
     element->position.x = __ui_calculate_position(element->constraints.x,
+                                                  sibling == NULL ? -1 : sibling->position.x,
+                                                  sibling == NULL ? -1 : sibling->size.x,
                                                   element->parent->position.x,
                                                   element->parent->size.x,
                                                   element->size.x);
     element->position.y = __ui_calculate_position(element->constraints.y,
+                                                  sibling == NULL ? -1 : sibling->position.y,
+                                                  sibling == NULL ? -1 : sibling->size.y,
                                                   element->parent->position.y,
                                                   element->parent->size.y,
                                                   element->size.y);
@@ -573,7 +619,7 @@ int __ui_calculate_size(UIConstraint* constraint, int parent_size)
     else
         return -1;
 }
-int __ui_calculate_position(UIConstraint* constraint, int parent_position, int parent_size, int size)
+int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size)
 {
     switch (constraint->constraint_type)
     {
@@ -589,7 +635,10 @@ int __ui_calculate_position(UIConstraint* constraint, int parent_position, int p
         case CT_RELATIVE:
             return round(parent_position + constraint->value * parent_size);
         case CT_OFFSET:
-            return 0;
+            if (sibling_position > 0)
+                return round(sibling_position + sibling_size + constraint->value);
+            else
+                return round(parent_position + constraint->value);
         default: //CT_ASPECT
             return -1;
     }

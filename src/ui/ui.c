@@ -18,7 +18,7 @@ void _ui_handle_event(UIData* ui_data, SDL_Event* event)
     {
         ui_data->main_container->base.size.x = event->window.data1;
         ui_data->main_container->base.size.y = event->window.data2;
-        ui_data->main_container->base.recalculate((UIElement*)ui_data->main_container);
+        ui_data->main_container->base.recalculate(NULL, (UIElement*)ui_data->main_container);
     }
     else if (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_BACKSPACE)
         ui_data->backspace_pressed = true;

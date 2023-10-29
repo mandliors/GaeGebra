@@ -47,6 +47,20 @@ int main(int argc, char** argv)
         new_relative_constraint(0.7),
         new_aspect_constraint(1.0)
     }, "X", (Color){40, 40, 40, 255}, GRAY, click);
+    ui_create_button(left_container, (UIConstraints)
+    {
+        new_center_constraint(),
+        new_offset_constraint(10),
+        new_relative_constraint(0.7),
+        new_aspect_constraint(1.0)
+    }, "X", (Color){40, 40, 40, 255}, GRAY, click);
+    ui_create_button(left_container, (UIConstraints)
+    {
+        new_center_constraint(),
+        new_offset_constraint(10),
+        new_relative_constraint(0.7),
+        new_aspect_constraint(1.0)
+    }, "X", (Color){40, 40, 40, 255}, GRAY, click);
     ui_create_checkbox(left_container, (UIConstraints)
     {
         new_center_constraint(),

@@ -18,7 +18,7 @@ typedef struct UIElement
 	Vector2 size;
 
 	void (*update)(UIElement* self);
-	void (*recalculate)(UIElement* self);
+	void (*recalculate)(UIElement* sibling, UIElement* self);
 	void (*render)(UIElement* self);
 	void (*destroy)(UIElement* self);
 } UIElement;
@@ -110,42 +110,42 @@ UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, doubl
 
 //internal functions
 void _ui_container_update(UIElement* self);
-void _ui_container_recalculate(UIElement* self);
+void _ui_container_recalculate(UIElement* sibling, UIElement* self);
 void _ui_container_render(UIElement* self);
 void _ui_container_destroy(UIElement* self);
 
 void _ui_panel_update(UIElement* self);
-void _ui_panel_recalculate(UIElement* self);
+void _ui_panel_recalculate(UIElement* sibling, UIElement* self);
 void _ui_panel_render(UIElement* self);
 void _ui_panel_destroy(UIElement* self);
 
 void _ui_label_update(UIElement* self);
-void _ui_label_recalculate(UIElement* self);
+void _ui_label_recalculate(UIElement* sibling, UIElement* self);
 void _ui_label_render(UIElement* self);
 void _ui_label_destroy(UIElement* self);
 
 void _ui_button_update(UIElement* self);
-void _ui_button_recalculate(UIElement* self);
+void _ui_button_recalculate(UIElement* sibling, UIElement* self);
 void _ui_button_render(UIElement* self);
 void _ui_button_destroy(UIElement* button);
 
 void _ui_textbox_update(UIElement* self);
-void _ui_textbox_recalculate(UIElement* self);
+void _ui_textbox_recalculate(UIElement* sibling, UIElement* self);
 void _ui_textbox_render(UIElement* self);
 void _ui_textbox_destroy(UIElement* self);
 
 void _ui_checkbox_update(UIElement* self);
-void _ui_checkbox_recalculate(UIElement* self);
+void _ui_checkbox_recalculate(UIElement* sibling, UIElement* self);
 void _ui_checkbox_render(UIElement* self);
 void _ui_checkbox_destroy(UIElement* self);
 
 void _ui_slider_update(UIElement* self);
-void _ui_slider_recalculate(UIElement* self);
+void _ui_slider_recalculate(UIElement* sibling, UIElement* self);
 void _ui_slider_render(UIElement* self);
 void _ui_slider_destroy(UIElement* self);
 
-void __ui_element_recalculate(UIElement* element);
+void __ui_element_recalculate(UIElement* sibling, UIElement* element);
 int __ui_calculate_size(UIConstraint* constraint, int parent_size);
-int __ui_calculate_position(UIConstraint* constraint, int parent_position, int parent_size, int size);
+int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size);
 
 #endif
