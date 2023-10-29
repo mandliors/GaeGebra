@@ -23,6 +23,7 @@ typedef struct UIConstraints
 } UIConstraints;
 
 //API functions
+UIConstraints constraints_from_string(const char* string);
 UIConstraint* new_pixel_constraint(int value);
 UIConstraint* new_center_constraint();
 UIConstraint* new_relative_constraint(double value);

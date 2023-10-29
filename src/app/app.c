@@ -6,6 +6,7 @@
 
 #include "app.h"
 #include "../window/window.h"
+#include "../renderer/renderer.h"
 
 #include "../debugmalloc.h"
 
@@ -111,6 +112,7 @@ void _app_add_window(Window* window)
 {
     vector_push_back(app_data.windows, (void*)window);
     _app_set_active_window(window);
+    renderer_set_target(window->renderer);
 }
 void _app_set_active_window(Window* window)
 {
