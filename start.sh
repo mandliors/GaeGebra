@@ -1,16 +1,16 @@
 #!/bin/bash
 
+executable_name="coordinate_geometry"
+
+clear
 cd build
-gnome-terminal -- bash -c 'make && ./coordinate_geometry'
-
-# if make failes
-if [ $? -ne 0 ]; then
-  echo "Make failed."
-  read -s -n 1
-fi
-
-# if executable fails
-if [ $? -ne 0 ]; then
-  echo "Executable failed."
-  read -s -n 1
-fi
+gnome-terminal -- bash -c " \
+  make; \
+  if [ \$? -ne 0 ]; then \
+      read -s -n 1 -p 'Make failed. Press any key to exit...'; \
+  else \
+    ./$executable_name; \
+    if [ \$? -ne 0 ]; then \
+      read -s -n 1 -p 'Execution failed. Press any key to exit...'; \
+    fi \
+  fi"

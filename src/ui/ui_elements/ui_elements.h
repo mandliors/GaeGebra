@@ -7,6 +7,8 @@
 
 #include <stdbool.h>
 
+#define UITEXTBOX_MAX_LENGTH 50
+
 typedef struct UIElement UIElement;
 typedef struct UIElement
 {
@@ -61,6 +63,18 @@ typedef struct UIButton
 	void (*on_click)(UIButton* self);
 } UIButton;
 
+typedef struct UITextbox
+{
+	UIElement base;
+
+	char text[UITEXTBOX_MAX_LENGTH + 1];
+	Color color;
+	Color text_color;
+	int corner_radius;
+	bool focused;
+	MouseState mouse_state;
+} UITextbox;
+
 typedef struct UICheckbox
 {
 	UIElement base;
@@ -90,6 +104,7 @@ UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
 UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color color, Color border_color, int border_width, int roundness);
 UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const char* text, Color color);
 UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color, void (*on_click)(UIButton* self));
+UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color);
 UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color);
 UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color);
 
@@ -113,6 +128,11 @@ void _ui_button_update(UIElement* self);
 void _ui_button_recalculate(UIElement* self);
 void _ui_button_render(UIElement* self);
 void _ui_button_destroy(UIElement* button);
+
+void _ui_textbox_update(UIElement* self);
+void _ui_textbox_recalculate(UIElement* self);
+void _ui_textbox_render(UIElement* self);
+void _ui_textbox_destroy(UIElement* self);
 
 void _ui_checkbox_update(UIElement* self);
 void _ui_checkbox_recalculate(UIElement* self);

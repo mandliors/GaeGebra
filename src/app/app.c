@@ -26,11 +26,16 @@ void app_init()
     app_data.windows = vector_create(0);
     app_data.active_window = NULL;
     app_data.target_frame_time = 1000 / 60;
+    app_data.last_frame_start = SDL_GetTicks();
     app_data.frame_start = SDL_GetTicks();
+    app_data.delta_time = 0.0;
 }
 void app_update()
 {
     app_data.frame_start = SDL_GetTicks();
+    app_data.delta_time = (double)(app_data.frame_start - app_data.last_frame_start) / 1000.0;
+    app_data.last_frame_start = app_data.frame_start;
+
     for (int i = 0; i < app_data.windows->size; i++)
         _window_reset((Window*)vector_get(app_data.windows, i));
 
@@ -92,6 +97,14 @@ Window* app_get_active_window()
 Vector* app_get_windows()
 {
     return app_data.windows;
+}
+double app_get_time()
+{
+    return (double)SDL_GetTicks() / 1000.0;
+}
+double app_get_delta_time()
+{
+    return (double)app_data.target_frame_time / 1000.0;
 }
 
 void _app_add_window(Window* window)

@@ -24,16 +24,16 @@ typedef struct InputData
 } InputData;
 
 //API functions
-bool is_mouse_button_down(int button);
-bool is_mouse_button_pressed(int button);
-bool is_mouse_button_released(int button);
+bool input_is_mouse_button_down(int button);
+bool input_is_mouse_button_pressed(int button);
+bool input_is_mouse_button_released(int button);
 
-bool is_key_down(int key);
-bool is_key_pressed(int key);
-bool is_key_released(int key);
+bool input_is_key_down(int key);
+bool input_is_key_pressed(int key);
+bool input_is_key_released(int key);
 
-SDL_Point get_mouse_position();
-int get_mouse_wheel_delta();
+SDL_Point input_get_mouse_position();
+int input_get_mouse_wheel_delta();
 
 //internal functions
 void _input_init(InputData* input_data);

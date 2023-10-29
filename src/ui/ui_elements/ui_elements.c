@@ -1,4 +1,5 @@
 #include "ui_elements.h"
+#include "../../app/app.h"
 #include "../../renderer/renderer.h"
 #include "../../input/input.h"
 #include "../../utils/math/math.h"
@@ -105,6 +106,33 @@ UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const
     button->base.recalculate(element);
     
     return button;
+}
+UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color)
+{
+    UITextbox* textbox = (UITextbox*)malloc(sizeof(UITextbox));
+    UIElement* element = (UIElement*)textbox;
+    
+    element->parent = (UIElement*)parent;
+    element->constraints = constraints;
+    element->position = (Vector2){0, 0};
+    element->size = (Vector2){0, 0};
+    element->update = _ui_textbox_update;
+    element->recalculate = _ui_textbox_recalculate;
+    element->render = _ui_textbox_render;
+    element->destroy = _ui_textbox_destroy;
+
+    textbox->color = color;
+    textbox->text_color = text_color;
+    textbox->corner_radius = 2;
+    strcpy(textbox->text, text);
+    textbox->focused = false;
+    textbox->mouse_state = MS_NONE;
+
+    if (parent)
+        vector_push_back(parent->children, element);
+    textbox->base.recalculate(element);
+    
+    return textbox;
 }
 UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color)
 {
@@ -232,9 +260,9 @@ void _ui_panel_recalculate(UIElement* self)
 void _ui_panel_render(UIElement* self)
 {
     UIPanel* panel = (UIPanel*)self;
-    draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, panel->corner_radius, panel->color);
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, panel->corner_radius, panel->color);
     for (int i = 0; i < panel->border_width; i++)
-        draw_rounded_rect(self->position.x + i, self->position.y + i, self->size.x - 2 * i, self->size.y - 2 * i, panel->corner_radius, panel->border_color);
+        renderer_draw_rounded_rect(self->position.x + i, self->position.y + i, self->size.x - 2 * i, self->size.y - 2 * i, panel->corner_radius, panel->border_color);
 }
 void _ui_panel_destroy(UIElement* self)
 {
@@ -248,7 +276,7 @@ void _ui_label_recalculate(UIElement* self)
 {
     //recalculate size
     UILabel* label = (UILabel*)self;
-    self->size = query_text_size(label->text);
+    self->size = renderer_query_text_size(label->text);
 
     //recalculate position
     self->position.x = __ui_calculate_position (self->constraints.x,
@@ -265,7 +293,7 @@ void _ui_label_recalculate(UIElement* self)
 void _ui_label_render(UIElement* self)
 {
     UILabel* label = (UILabel*)self;
-    draw_text(label->text, self->position.x, self->position.y, label->color);
+    renderer_draw_text(label->text, self->position.x, self->position.y, label->color);
 }
 void _ui_label_destroy(UIElement* self)
 {
@@ -278,12 +306,12 @@ void _ui_label_destroy(UIElement* self)
 void _ui_button_update(UIElement* self)
 {
     UIButton* button = (UIButton*)self;
-    if (check_collision_point_rect(get_mouse_position().x, get_mouse_position().y,
+    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             button->mouse_state = MS_PRESS;
-        else if (is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
         {
             if (button->on_click)
                 button->on_click(button);
@@ -294,7 +322,7 @@ void _ui_button_update(UIElement* self)
     }
     else if (button->mouse_state != MS_PRESS)
         button->mouse_state = MS_NONE;
-    else if (is_mouse_button_released(SDL_BUTTON_LEFT))
+    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         button->mouse_state = MS_NONE;
 }
 void _ui_button_recalculate(UIElement* self)
@@ -302,7 +330,7 @@ void _ui_button_recalculate(UIElement* self)
     __ui_element_recalculate(self);
     
     UIButton* button = (UIButton*)self;
-    Vector2 text_size = query_text_size(button->text);
+    Vector2 text_size = renderer_query_text_size(button->text);
     button->text_position = (Vector2){self->position.x + (self->size.x - text_size.x) / 2,
                                       self->position.y + (self->size.y - text_size.y) / 2};
 }
@@ -310,9 +338,9 @@ void _ui_button_render(UIElement* self)
 {
     UIButton* button = (UIButton*)self;
     Color color = color_shift(button->color, button->mouse_state == MS_PRESS ? 15 : (button->mouse_state == MS_HOVER ? 10 : 0));
-    draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, button->corner_radius, color);
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, button->corner_radius, color);
     if (strcmp(button->text, "") != 0)
-        draw_text(button->text, button->text_position.x, button->text_position.y, button->text_color);
+        renderer_draw_text(button->text, button->text_position.x, button->text_position.y, button->text_color);
 }
 void _ui_button_destroy(UIElement* self)
 {
@@ -322,15 +350,105 @@ void _ui_button_destroy(UIElement* self)
     free(button);
 }
 
+void _ui_textbox_update(UIElement* self)
+{
+    UITextbox* textbox = (UITextbox*)self;
+    if (textbox->focused) 
+    {
+        if (app_get_active_window()->ui_data.backspace_pressed)
+        {
+            if (input_is_key_down(SDL_SCANCODE_LCTRL))
+                textbox->text[0] = '\0';
+            else
+            {
+                int textlen = strlen(textbox->text);
+                do
+                {
+                    if (textlen == 0)
+                        break;
+                    if ((textbox->text[textlen - 1] & 0x80) == 0x00)
+                    {
+                        textbox->text[textlen - 1] = 0x00;
+                        break;
+                    }
+                    if ((textbox->text[textlen - 1] & 0xC0) == 0x80) 
+                    {
+                        textbox->text[textlen - 1] = 0x00;
+                        textlen--;
+                    }
+                    if ((textbox->text[textlen - 1] & 0xC0) == 0xC0)
+                    {
+                        textbox->text[textlen - 1] = 0x00;
+                        break;
+                    }
+                } while(true);
+                app_get_active_window()->ui_data.backspace_pressed = false;
+            }
+        }
+        else if (app_get_active_window()->ui_data.text_input[0] != '\0')
+        {
+            if (strlen(textbox->text) + strlen(app_get_active_window()->ui_data.text_input) < UITEXTBOX_MAX_LENGTH)
+                strcat(textbox->text, app_get_active_window()->ui_data.text_input);
+            app_get_active_window()->ui_data.text_input[0] = '\0';
+        }
+    }
+
+    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+                                   self->position.x, self->position.y, self->size.x, self->size.y))
+    {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+            textbox->mouse_state = MS_PRESS;
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+        {
+            if (textbox->mouse_state == MS_PRESS)
+            {
+                textbox->mouse_state = MS_HOVER;
+                textbox->focused = true;
+                SDL_StartTextInput();
+            }
+            else if (textbox->mouse_state == MS_HOVER)
+                textbox->focused = false;
+        }
+        else if (textbox->mouse_state == MS_NONE)
+            textbox->mouse_state = MS_HOVER;
+    }
+    else if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+    {
+        textbox->focused = false;
+        SDL_StopTextInput();
+    }
+    else if (textbox->mouse_state != MS_PRESS || input_is_mouse_button_released(SDL_BUTTON_LEFT))
+        textbox->mouse_state = MS_NONE;
+}
+void _ui_textbox_recalculate(UIElement* self)
+{
+    __ui_element_recalculate(self);
+}
+void _ui_textbox_render(UIElement* self)
+{
+    UITextbox* textbox = (UITextbox*)self;
+    Vector2 text_size = renderer_query_text_size(textbox->text);
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->mouse_state == MS_PRESS ? color_shift(textbox->color, 15) : (textbox->mouse_state == MS_HOVER ? color_shift(textbox->color, 10) : textbox->color));
+    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->color);
+    if (textbox->text[0] != '\0') renderer_draw_text(textbox->text, self->position.x + 6, self->position.y + (self->size.y - text_size.y) * 0.5, textbox->text_color);
+    if (textbox->focused) renderer_draw_line(self->position.x + text_size.x + 6, self->position.y + 2, self->position.x + text_size.x + 6, self->position.y + self->size.y - 4, 2, textbox->text_color);
+}
+void _ui_textbox_destroy(UIElement* self)
+{
+    _ui_constraints_free(&self->constraints);
+    UITextbox* textbox = (UITextbox*)self;
+    free(textbox);
+}
+
 void _ui_checkbox_update(UIElement* self)
 {
     UICheckbox* checkbox = (UICheckbox*)self;
-    if (check_collision_point_rect(get_mouse_position().x, get_mouse_position().y,
+    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             checkbox->mouse_state = MS_PRESS;
-        else if (is_mouse_button_released(SDL_BUTTON_LEFT) && checkbox->mouse_state == MS_PRESS)
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && checkbox->mouse_state == MS_PRESS)
         {
             checkbox->checked = !checkbox->checked;
             checkbox->mouse_state = MS_HOVER;
@@ -340,7 +458,7 @@ void _ui_checkbox_update(UIElement* self)
     }
     else if (checkbox->mouse_state != MS_PRESS)
         checkbox->mouse_state = MS_NONE;
-    else if (is_mouse_button_released(SDL_BUTTON_LEFT))
+    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         checkbox->mouse_state = MS_NONE;
 }
 void _ui_checkbox_recalculate(UIElement* self)
@@ -352,22 +470,22 @@ void _ui_checkbox_render(UIElement* self)
     UICheckbox* checkbox = (UICheckbox*)self;
     if (checkbox->checked)
     {
-        draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
+        renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
         Vector2 p1 = (Vector2){self->position.x + self->size.x * 0.25, self->position.y + self->size.y * 0.5};
         Vector2 p2 = (Vector2){self->position.x + self->size.x * 0.45, self->position.y + self->size.y * 0.75};
         Vector2 p3 = (Vector2){self->position.x + self->size.x * 0.8, self->position.y + self->size.y * 0.25};
-        draw_line(p1.x, p1.y, p2.x, p2.y, 2, checkbox->unchecked_color);
-        draw_line(p2.x, p2.y, p3.x, p3.y, 2, checkbox->unchecked_color);
+        renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 2, checkbox->unchecked_color);
+        renderer_draw_line(p2.x, p2.y, p3.x, p3.y, 2, checkbox->unchecked_color);
     }
     else
     {
         if (checkbox->mouse_state == MS_NONE)
-            draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->border_color);
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->border_color);
         else if (checkbox->mouse_state == MS_HOVER)
-            draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
         else if (checkbox->mouse_state == MS_PRESS)
-            draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 4));
-        draw_filled_rounded_rect(self->position.x + 2, self->position.y + 2, self->size.x - 4, self->size.y - 4, checkbox->corner_radius, checkbox->unchecked_color);
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 4));
+        renderer_draw_filled_rounded_rect(self->position.x + 2, self->position.y + 2, self->size.x - 4, self->size.y - 4, checkbox->corner_radius, checkbox->unchecked_color);
     }
 }
 void _ui_checkbox_destroy(UIElement* self)
@@ -380,23 +498,23 @@ void _ui_checkbox_destroy(UIElement* self)
 void _ui_slider_update(UIElement* self)
 {
     UISlider* slider = (UISlider*)self;
-    if (check_collision_point_rect(get_mouse_position().x, get_mouse_position().y,
+    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             slider->mouse_state = MS_PRESS;
-        else if (is_mouse_button_released(SDL_BUTTON_LEFT) && slider->mouse_state == MS_PRESS)
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && slider->mouse_state == MS_PRESS)
             slider->mouse_state = MS_HOVER;
         else if (slider->mouse_state == MS_NONE)
             slider->mouse_state = MS_HOVER;
     }
     else if (slider->mouse_state != MS_PRESS)
         slider->mouse_state = MS_NONE;
-    else if (is_mouse_button_released(SDL_BUTTON_LEFT))
+    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         slider->mouse_state = MS_NONE;
 
     if (slider->mouse_state == MS_PRESS)
-        slider->value = clamp((get_mouse_position().x - self->position.x) / (double)self->size.x, 0.0, 1.0);
+        slider->value = clamp((input_get_mouse_position().x - self->position.x) / (double)self->size.x, 0.0, 1.0);
 }
 void _ui_slider_recalculate(UIElement* self)
 {
@@ -407,8 +525,8 @@ void _ui_slider_render(UIElement* self)
     UISlider* slider = (UISlider*)self;
     int handle_thickness = 1.4 * slider->thickness;
     Color color = color_shift(slider->color, slider->mouse_state == MS_PRESS ? 15 : (slider->mouse_state == MS_HOVER ? 10 : 0));
-    draw_filled_rounded_rect(self->position.x, self->position.y + (self->size.y - slider->thickness) * 0.5, self->size.x, slider->thickness, slider->corner_radius, color);
-    draw_filled_rounded_rect(self->position.x + slider->value * self->size.x - handle_thickness * 0.5, self->position.y, handle_thickness, self->size.y, slider->corner_radius, slider->slider_color);
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y + (self->size.y - slider->thickness) * 0.5, self->size.x, slider->thickness, slider->corner_radius, color);
+    renderer_draw_filled_rounded_rect(self->position.x + slider->value * self->size.x - handle_thickness * 0.5, self->position.y, handle_thickness, self->size.y, slider->corner_radius, slider->slider_color);
 }
 void _ui_slider_destroy(UIElement* self)
 {
@@ -470,6 +588,8 @@ int __ui_calculate_position(UIConstraint* constraint, int parent_position, int p
             return round(parent_position + (parent_size - size) / 2);
         case CT_RELATIVE:
             return round(parent_position + constraint->value * parent_size);
+        case CT_OFFSET:
+            return 0;
         default: //CT_ASPECT
             return -1;
     }

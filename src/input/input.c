@@ -6,44 +6,44 @@
 
 #include "../debugmalloc.h"
 
-bool is_mouse_button_down(int button)
+bool input_is_mouse_button_down(int button)
 {
     assert(app_get_active_window()); //there is no window
     return app_get_active_window()->input_data.current_mouse_button_state[button];
 }
-bool is_mouse_button_pressed(int button)
+bool input_is_mouse_button_pressed(int button)
 {
     assert(app_get_active_window()); //there is no window
     return app_get_active_window()->input_data.current_mouse_button_state[button] && !app_get_active_window()->input_data.old_mouse_button_state[button];
 }
-bool is_mouse_button_released(int button)
+bool input_is_mouse_button_released(int button)
 {
     assert(app_get_active_window()); //there is no window
     return !app_get_active_window()->input_data.current_mouse_button_state[button] && app_get_active_window()->input_data.old_mouse_button_state[button];
 }
 
-bool is_key_down(int key)
+bool input_is_key_down(int key)
 {
     assert(app_get_active_window()); //there is no window
     return app_get_active_window()->input_data.current_keyboard_state[key];
 }
-bool is_key_pressed(int key)
+bool input_is_key_pressed(int key)
 {
     assert(app_get_active_window()); //there is no window
     return app_get_active_window()->input_data.current_keyboard_state[key] && !app_get_active_window()->input_data.old_keyboard_state[key];
 }
-bool is_key_released(int key)
+bool input_is_key_released(int key)
 {
     assert(app_get_active_window()); //there is no window
     return !app_get_active_window()->input_data.current_keyboard_state[key] && app_get_active_window()->input_data.old_keyboard_state[key];
 }
 
-SDL_Point get_mouse_position()
+SDL_Point input_get_mouse_position()
 {
     assert(app_get_active_window()); //there is no window
     return app_get_active_window()->input_data.mouse_position;
 }
-int get_mouse_wheel_delta()
+int input_get_mouse_wheel_delta()
 {
     assert(app_get_active_window()); //there is no window
     return app_get_active_window()->input_data.mouse_wheel_delta;

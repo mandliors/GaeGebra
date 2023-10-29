@@ -23,6 +23,13 @@ UIConstraint* new_relative_constraint(double value)
     constraint->constraint_type = CT_RELATIVE;
     return constraint;
 }
+UIConstraint* new_offset_constraint(double value)
+{
+    UIConstraint* constraint = (UIConstraint*)malloc(sizeof(UIConstraint));
+    constraint->value = value;
+    constraint->constraint_type = CT_OFFSET;
+    return constraint;
+}
 UIConstraint* new_aspect_constraint(double value)
 {
     UIConstraint* constraint = (UIConstraint*)malloc(sizeof(UIConstraint));

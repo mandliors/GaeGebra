@@ -78,12 +78,19 @@ int main(int argc, char** argv)
     }, "Coordinate Geometry", DARK_GRAY);
     ui_create_slider(top_container, (UIConstraints)
     {
-        new_pixel_constraint(10),
+        new_relative_constraint(0.68),
         new_pixel_constraint(10),
         new_relative_constraint(0.3),
         new_pixel_constraint(30)
     }, 0.5, DARK_GRAY, color_shift(DARK_GRAY, 40));
-    
+    ui_create_textbox(top_container, (UIConstraints)
+    {
+        new_pixel_constraint(10),
+        new_pixel_constraint(10),
+        new_relative_constraint(0.3),
+        new_pixel_constraint(30)
+    }, "Hello", DARK_GRAY, GRAY);
+
     while (!main_window->close_requested)
     {
         app_update();

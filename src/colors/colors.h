@@ -24,12 +24,9 @@
 Color color_from_hex(int hex);
 Color color_from_rgb(int r, int g, int b);
 Color color_from_rgba(int r, int g, int b, int a);
-Color color_from_hsv(float h, float s, float v);
-Color color_from_hsl(float h, float s, float l);
+Color color_from_hsv(double h, double s, double v);
+Color color_from_grayscale(int value);
 Color color_fade(Color color, double fade);
 Color color_shift(Color color, int shift);
-
-//gotta test color functions
-//next ui element is textbox
 
 #endif

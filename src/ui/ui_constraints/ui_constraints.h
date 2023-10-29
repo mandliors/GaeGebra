@@ -6,6 +6,7 @@ typedef enum ConstraintType
     CT_PIXEL = 0,
     CT_CENTER,
     CT_RELATIVE,
+    CT_OFFSET,
     CT_ASPECT
 } ConstraintType;
 
@@ -25,6 +26,7 @@ typedef struct UIConstraints
 UIConstraint* new_pixel_constraint(int value);
 UIConstraint* new_center_constraint();
 UIConstraint* new_relative_constraint(double value);
+UIConstraint* new_offset_constraint(double value);
 UIConstraint* new_aspect_constraint(double value);
 
 //internal functions
