@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     ui_create_panel(top_container, constraints_from_string("0r 0r 1r 1r"), GRAY, DARK_GRAY, 2, 2);
     ui_create_label(top_container, constraints_from_string("c c 0p 0p"), "Coordinate Geometry", DARK_GRAY);
     ui_create_slider(top_container, constraints_from_string("0.68r 10p 0.3r 30p"), 0.5, DARK_GRAY, color_shift(DARK_GRAY, 40));
-    ui_create_textbox(top_container, constraints_from_string("10p 10p 0.3r 30p"), "Hello", DARK_GRAY, GRAY);
+    ui_create_textbox(top_container, constraints_from_string("10p 10p 0.3r 30p"), "bing chilling", DARK_GRAY, GRAY);
 
     while (!main_window->close_requested)
     {
