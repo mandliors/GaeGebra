@@ -4,6 +4,7 @@
 #include "../ui_constraints/ui_constraints.h"
 #include "../../utils/vector/vector.h"
 #include "../../colors/colors.h"
+#include "../../texture/texture.h"
 
 #include <stdbool.h>
 
@@ -56,12 +57,22 @@ typedef struct UIButton
 
 	char* text;
 	Vector2 text_position;
-	MouseState mouse_state;
 	Color color;
 	Color text_color;
 	int corner_radius;
+	MouseState mouse_state;
 	void (*on_click)(UIButton* self);
 } UIButton;
+
+typedef struct UIImageButton UIImageButton;
+typedef struct UIImageButton
+{
+	UIElement base;
+
+	Texture* texture;
+	MouseState mouse_state;
+	void (*on_click)(UIImageButton* self);
+} UIImageButton;
 
 typedef struct UITextbox
 {
@@ -104,6 +115,7 @@ UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
 UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color color, Color border_color, int border_width, int roundness);
 UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const char* text, Color color);
 UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color, void (*on_click)(UIButton* self));
+UIImageButton* ui_create_imagebutton(UIContainer* parent, UIConstraints constraints, Texture* texture, void (*on_click)(UIImageButton* self));
 UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color);
 UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color);
 UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color);
@@ -127,7 +139,12 @@ void _ui_label_destroy(UIElement* self);
 void _ui_button_update(UIElement* self);
 void _ui_button_recalculate(UIElement* sibling, UIElement* self);
 void _ui_button_render(UIElement* self);
-void _ui_button_destroy(UIElement* button);
+void _ui_button_destroy(UIElement* self);
+
+void _ui_imagebutton_update(UIElement* self);
+void _ui_imagebutton_recalculate(UIElement* sibling, UIElement* self);
+void _ui_imagebutton_render(UIElement* self);
+void _ui_imagebutton_destroy(UIElement* self);
 
 void _ui_textbox_update(UIElement* self);
 void _ui_textbox_recalculate(UIElement* sibling, UIElement* self);

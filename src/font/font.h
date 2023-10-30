@@ -1,5 +1,5 @@
-#ifndef FONTS_H
-#define FONTS_H
+#ifndef FONT_H
+#define FONT_H
 
 #ifdef _WIN32
     #include <SDL_ttf.h>
@@ -16,6 +16,9 @@ typedef struct Font
 } Font;
 
 Font* font_load(const char* path, int size);
-void font_unload(Font* font);
+
+//internal functions
+void _font_init();
+void _font_close();
 
 #endif

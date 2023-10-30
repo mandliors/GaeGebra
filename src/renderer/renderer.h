@@ -10,7 +10,7 @@
 #endif
 
 #include "../colors/colors.h"
-#include "../fonts/fonts.h"
+#include "../font/font.h"
 #include "../texture/texture.h"
 #include "../defines.h"
 

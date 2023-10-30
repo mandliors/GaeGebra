@@ -17,6 +17,9 @@ typedef struct Texture
 } Texture;
 
 Texture* texture_load(SDL_Renderer* renderer, const char* path);
-void texture_unload(Texture* texture);
+
+//internal functions
+void _texture_init();
+void _texture_close();
 
 #endif

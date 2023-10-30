@@ -105,12 +105,41 @@ UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const
     element->render = _ui_button_render;
     element->destroy = _ui_button_destroy;
 
+    button->text = malloc(strlen(text) + 1);
+    strcpy(button->text, text);
+    button->text_position = (Vector2){0, 0};
     button->color = color;
     button->text_color = text_color;
     button->corner_radius = 2;
-    button->text = malloc(strlen(text) + 1);
-    strcpy(button->text, text);
     button->mouse_state = MS_NONE;
+    button->on_click = on_click;
+
+    if (parent->children->size > 0)
+        button->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        button->base.recalculate(NULL, element);
+
+    if (parent)
+        vector_push_back(parent->children, element);
+    
+    return button;
+}
+UIImageButton* ui_create_imagebutton(UIContainer* parent, UIConstraints constraints, Texture* texture, void (*on_click)(UIImageButton* self))
+{
+    UIImageButton* button = (UIImageButton*)malloc(sizeof(UIImageButton));
+    UIElement* element = (UIElement*)button;
+    
+    element->parent = (UIElement*)parent;
+    element->constraints = constraints;
+    element->position = (Vector2){0, 0};
+    element->size = (Vector2){0, 0};
+    element->update = _ui_imagebutton_update;
+    element->recalculate = _ui_imagebutton_recalculate;
+    element->render = _ui_imagebutton_render;
+    element->destroy = _ui_imagebutton_destroy;
+
+    button->mouse_state = MS_NONE;
+    button->texture = texture;
     button->on_click = on_click;
 
     if (parent->children->size > 0)
@@ -381,7 +410,7 @@ void _ui_button_render(UIElement* self)
     UIButton* button = (UIButton*)self;
     Color color = color_shift(button->color, button->mouse_state == MS_PRESS ? 15 : (button->mouse_state == MS_HOVER ? 10 : 0));
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, button->corner_radius, color);
-    if (strcmp(button->text, "") != 0)
+    if (button->text[0] != '\0')
         renderer_draw_text(button->text, button->text_position.x, button->text_position.y, button->text_color);
 }
 void _ui_button_destroy(UIElement* self)
@@ -389,6 +418,52 @@ void _ui_button_destroy(UIElement* self)
     _ui_constraints_free(&self->constraints);
     UIButton* button = (UIButton*)self;
     free(button->text);
+    free(button);
+}
+
+void _ui_imagebutton_update(UIElement* self)
+{
+    UIImageButton* button = (UIImageButton*)self;
+    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+                                   self->position.x, self->position.y, self->size.x, self->size.y))
+    {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+            button->mouse_state = MS_PRESS;
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
+        {
+            if (button->on_click)
+                button->on_click(button);
+            button->mouse_state = MS_HOVER;
+        }
+        else if (button->mouse_state == MS_NONE)
+            button->mouse_state = MS_HOVER;
+    }
+    else if (button->mouse_state != MS_PRESS)
+        button->mouse_state = MS_NONE;
+    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+        button->mouse_state = MS_NONE;
+}
+void _ui_imagebutton_recalculate(UIElement* sibling, UIElement* self)
+{
+    __ui_element_recalculate(sibling, self);
+}
+void _ui_imagebutton_render(UIElement* self)
+{
+    UIImageButton* button = (UIImageButton*)self;
+    renderer_draw_texture(button->texture, self->position.x, self->position.y, self->size.x, self->size.y);
+    if (button->mouse_state != MS_NONE)
+    {
+        SDL_SetTextureBlendMode(button->texture->texture, SDL_BLENDMODE_ADD);
+        SDL_SetTextureAlphaMod(button->texture->texture, button->mouse_state == MS_HOVER ? 10 : 15);
+        renderer_draw_texture(button->texture, self->position.x, self->position.y, self->size.x, self->size.y);
+        SDL_SetTextureAlphaMod(button->texture->texture, 255);
+        SDL_SetTextureBlendMode(button->texture->texture, SDL_BLENDMODE_BLEND);
+    }
+}
+void _ui_imagebutton_destroy(UIElement* self)
+{
+    _ui_constraints_free(&self->constraints);
+    UIImageButton* button = (UIImageButton*)self;
     free(button);
 }
 

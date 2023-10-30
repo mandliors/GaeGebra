@@ -30,6 +30,8 @@ void app_init()
     app_data.last_frame_start = SDL_GetTicks();
     app_data.frame_start = SDL_GetTicks();
     app_data.delta_time = 0.0;
+    _font_init();
+    _texture_init();
 }
 void app_update()
 {
@@ -75,6 +77,8 @@ void app_request_close()
 }
 void app_close()
 {
+    _font_close();
+    _texture_close();
     for (int i = 0; i < app_data.windows->size; i++)
     {
         Window* window = (Window*)vector_get(app_data.windows, i);

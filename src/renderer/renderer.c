@@ -1,5 +1,5 @@
 #include "renderer.h"
-#include "../fonts/fonts.h"
+#include "../font/font.h"
 
 #include "../debugmalloc.h"
 
@@ -109,7 +109,9 @@ void renderer_draw_text(const char* text, int x, int y, Color color)
 }
 Vector2 renderer_query_text_size(const char* text)
 {
-	Vector2 size;
+	Vector2 size = { 0, 0 };
+	if (default_font == NULL)
+		return size;		
 	TTF_SizeUTF8(default_font->font, text, &size.x, &size.y);
 	return size;
 }

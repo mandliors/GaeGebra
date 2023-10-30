@@ -1,7 +1,11 @@
 #include <assert.h>
+
 #include "texture.h"
+#include "../utils/vector/vector.h"
 
 #include "../debugmalloc.h"
+
+Vector* textures;
 
 Texture* texture_load(SDL_Renderer* renderer, const char* path)
 {
@@ -10,10 +14,21 @@ Texture* texture_load(SDL_Renderer* renderer, const char* path)
 	SDL_Texture* tex = IMG_LoadTexture(renderer, path);
 	SDL_QueryTexture(tex, NULL, NULL, &texture->width, &texture->height);
 	texture->texture = tex;
+	vector_push_back(textures, texture);
 	return texture;
 }
-void texture_unload(Texture* texture)
+
+void _texture_init()
 {
-	SDL_DestroyTexture(texture->texture);
-	free(texture);
+	textures = vector_create(0);
+}
+void _texture_close(Texture* texture)
+{
+	for (int i = 0; i < textures->size; i++)
+	{
+		Texture* texture = vector_get(textures, i);
+		SDL_DestroyTexture(texture->texture);
+		free(texture);
+	}
+	vector_free(textures);
 }
