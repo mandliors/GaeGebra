@@ -1,8 +1,6 @@
 #include "vector.h"
 #include <assert.h>
 
-#include "../../debugmalloc.h"
-
 Vector* vector_create(size_t capacity)
 {
 	Vector* vector = malloc(sizeof(Vector));

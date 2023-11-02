@@ -10,12 +10,14 @@
 #include "../app/app.h"
 #include "../input/input.h"
 
-#include "../debugmalloc.h"
-
 Window* window_create(const char* title, int width, int height, int flags)
 {
     Window* window = (Window*)malloc(sizeof(Window));
-    assert(window); //couldn't allocate memory    
+    if (window == NULL)
+    {
+        SDL_Log("could not allocate memory");
+        exit(1);
+    }
     window->window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
     if (window->window == NULL)
     {

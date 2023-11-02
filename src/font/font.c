@@ -3,8 +3,6 @@
 #include "font.h"
 #include "../utils/vector/vector.h"
 
-#include "../debugmalloc.h"
-
 Vector* fonts;
 
 Font* font_load(const char* path, int size)
@@ -24,7 +22,7 @@ void _font_init()
 }
 void _font_close()
 {
-	for (int i = 0; i < fonts->size; i++)
+	for (size_t i = 0; i < fonts->size; i++)
 	{
 		Font* font = vector_get(fonts, i);
 		TTF_CloseFont(font->font);

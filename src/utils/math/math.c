@@ -1,7 +1,5 @@
 #include "math.h"
 
-#include "../../debugmalloc.h"
-
 double deg_to_rad(double deg)
 {
     return deg * (PI / 180);

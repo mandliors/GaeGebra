@@ -15,7 +15,7 @@ typedef struct AppData
     Vector* windows;
     Window* active_window;
 
-    int target_frame_time;
+    Uint32 target_frame_time;
     Uint32 last_frame_start;
     Uint32 frame_start;
     double delta_time;
@@ -27,7 +27,7 @@ void app_update();
 void app_render();
 void app_request_close();
 void app_close();
-void app_set_target_fps(int fps);
+void app_set_target_fps(Uint32 fps);
 
 Window* app_get_active_window();
 Vector* app_get_windows();

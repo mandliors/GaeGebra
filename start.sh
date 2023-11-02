@@ -4,7 +4,6 @@ executable_name="coordinate_geometry"
 
 clear
 cd build
-rm log.txt
 gnome-terminal -- bash -c " \
   make; \
   if [ \$? -ne 0 ]; then \

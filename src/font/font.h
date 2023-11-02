@@ -7,8 +7,6 @@
     #include <SDL2/SDL_ttf.h>
 #endif
 
-#include "../debugmalloc.h"
-
 typedef struct Font
 {
 	TTF_Font* font;

@@ -1,8 +1,6 @@
 #include "renderer.h"
 #include "../font/font.h"
 
-#include "../debugmalloc.h"
-
 SDL_Renderer* renderer;
 Font* default_font;
 

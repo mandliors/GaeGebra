@@ -12,25 +12,22 @@ typedef enum ConstraintType
 
 typedef struct UIConstraint
 {
-    ConstraintType constraint_type;
     double value;
+    ConstraintType constraint_type;
     void (*recalculate)(void* self);
 } UIConstraint;
 
 typedef struct UIConstraints
 {
-    UIConstraint *x, *y, *width, *height;
+    UIConstraint x, y, width, height;
 } UIConstraints;
 
 //API functions
+UIConstraint new_pixel_constraint(int value);
+UIConstraint new_center_constraint();
+UIConstraint new_relative_constraint(double value);
+UIConstraint new_offset_constraint(double value);
+UIConstraint new_aspect_constraint(double value);
 UIConstraints constraints_from_string(const char* string);
-UIConstraint* new_pixel_constraint(int value);
-UIConstraint* new_center_constraint();
-UIConstraint* new_relative_constraint(double value);
-UIConstraint* new_offset_constraint(double value);
-UIConstraint* new_aspect_constraint(double value);
-
-//internal functions
-void _ui_constraints_free(UIConstraints* constraints);
 
 #endif

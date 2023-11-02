@@ -1,11 +1,9 @@
 #include "ui.h"
 #include "../app/app.h"
 
-#include "../debugmalloc.h"
-
 void _ui_init(UIData* ui_data, int width, int height)
 {
-    UIConstraints constraints = {NULL, NULL, NULL, NULL};
+    UIConstraints constraints;
     ui_data->main_container = ui_create_container(NULL, constraints);
     ui_data->main_container->base.size = (Vector2){width, height};
     ui_data->text_input[0] = '\0';

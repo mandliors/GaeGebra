@@ -4,8 +4,6 @@
 #include "../window/window.h"
 #include "../app/app.h"
 
-#include "../debugmalloc.h"
-
 bool input_is_mouse_button_down(int button)
 {
     assert(app_get_active_window()); //there is no window
@@ -59,8 +57,13 @@ void _input_init(InputData* input_data)
     SDL_GetMouseState(&input_data->mouse_position.x, &input_data->mouse_position.y);
     input_data->mouse_wheel_delta = 0;
 
-    input_data->current_keyboard_state = (Uint8*)SDL_GetKeyboardState(&input_data->key_count);
+    input_data->current_keyboard_state = (Uint8*)SDL_GetKeyboardState((int*)&input_data->key_count);
     input_data->old_keyboard_state = (Uint8*)malloc(input_data->key_count * sizeof(Uint8));
+    if (input_data->old_keyboard_state == NULL)
+    {
+        SDL_Log("could not allocate memory");
+        exit(1);
+    }
     assert(input_data->old_keyboard_state); //couldn't allocate memory
 }
 void _input_handle_event(InputData* input_data, SDL_Event* event)

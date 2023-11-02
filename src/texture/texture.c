@@ -3,8 +3,6 @@
 #include "texture.h"
 #include "../utils/vector/vector.h"
 
-#include "../debugmalloc.h"
-
 Vector* textures;
 
 Texture* texture_load(SDL_Renderer* renderer, const char* path)
@@ -22,9 +20,9 @@ void _texture_init()
 {
 	textures = vector_create(0);
 }
-void _texture_close(Texture* texture)
+void _texture_close()
 {
-	for (int i = 0; i < textures->size; i++)
+	for (size_t i = 0; i < textures->size; i++)
 	{
 		Texture* texture = vector_get(textures, i);
 		SDL_DestroyTexture(texture->texture);
