@@ -1,4 +1,4 @@
-#include "ui_elements.h"
+#include "ui_element.h"
 #include "../../app/app.h"
 #include "../../renderer/renderer.h"
 #include "../../input/input.h"
@@ -197,7 +197,6 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
     checkbox->checked = false;
     checkbox->checked_color = checked_color;
     checkbox->unchecked_color = unchecked_color;
-    checkbox->border_color = color_shift(unchecked_color, 128);
     checkbox->corner_radius = 2;
 
     if (parent->children->size > 0)
@@ -284,7 +283,7 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     int idx = -1;
     items = strdup(items);
     char* token = strtok(items, ";");
-    dropdown->items = vector_create(item_count + 1u);
+    dropdown->items = vector_create(item_count + 1);
     _UIDropdownItem* item = _ui_dropdownitem_create(element, constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click);
     vector_push_back(dropdown->items, item);
     while (token != NULL)
@@ -537,7 +536,7 @@ void _ui_textbox_update(UIElement* self)
         if (app_get_active_window()->ui_data.backspace_pressed)
         {
             size_t textlen = strlen(textbox->text);
-            if (input_is_key_down(SDL_SCANCODE_LCTRL))
+            if (input_is_key_down(SDL_SCANCODE_LCTRL) && textlen > 0)
             {
                 bool found = false;
                 for (size_t i = textlen - 1; i >= 1; i--)
@@ -661,7 +660,12 @@ void _ui_checkbox_render(UIElement* self)
     UICheckbox* checkbox = (UICheckbox*)self;
     if (checkbox->checked)
     {
-        renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
+        if (checkbox->mouse_state == MS_NONE)
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
+        else if (checkbox->mouse_state == MS_HOVER)
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 10));
+        else if (checkbox->mouse_state == MS_PRESS)
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 15));
         Vector2 p1 = (Vector2){self->position.x + (int)round(self->size.x * 0.25), (int)round(self->position.y + self->size.y * 0.5)};
         Vector2 p2 = (Vector2){self->position.x + (int)round(self->size.x * 0.45), (int)round(self->position.y + self->size.y * 0.75)};
         Vector2 p3 = (Vector2){self->position.x + (int)round(self->size.x * 0.8), (int)round(self->position.y + self->size.y * 0.25)};
@@ -671,11 +675,11 @@ void _ui_checkbox_render(UIElement* self)
     else
     {
         if (checkbox->mouse_state == MS_NONE)
-            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->border_color);
-        else if (checkbox->mouse_state == MS_HOVER)
             renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
+        else if (checkbox->mouse_state == MS_HOVER)
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 10));
         else if (checkbox->mouse_state == MS_PRESS)
-            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 4));
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 15));
         renderer_draw_filled_rounded_rect(self->position.x + 2, self->position.y + 2, self->size.x - 4, self->size.y - 4, checkbox->corner_radius, checkbox->unchecked_color);
     }
 }
@@ -779,7 +783,7 @@ void _ui_dropdownitem_render(UIElement* self)
     _UIDropdownItem* item = (_UIDropdownItem*)self;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->corner_radius, item->mouse_state == MS_PRESS ? color_shift(item->color, 15) : (item->mouse_state == MS_HOVER ? color_shift(item->color, 10) : item->color));
     renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->corner_radius, item->color);
-    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (self->size.y - (int)round(renderer_query_text_size(item->text).y * 0.5)), item->text_color);
+    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), item->text_color);
 }
 void _ui_dropdownitem_destroy(UIElement* self)
 {

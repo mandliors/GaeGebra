@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include "../input/input.h"
 #include "../ui/ui.h"
-#include "../ui/ui_elements/ui_elements.h"
+#include "../ui/ui_element/ui_element.h"
 
 typedef struct Window
 {

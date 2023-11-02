@@ -24,7 +24,7 @@ int main(void)
     ui_create_button(left_container, constraints_from_string("c 8p 0.7r 1.0a"), "X", (Color){40, 40, 40, 255}, GRAY, click);
     ui_create_button(left_container, constraints_from_string("c 10o 0.7r 1.0a"), "_", (Color){40, 40, 40, 255}, GRAY, click);
     ui_create_button(left_container, constraints_from_string("c 10o 0.7r 1.0a"), "O", (Color){40, 40, 40, 255}, GRAY, click);
-    ui_create_checkbox(left_container, constraints_from_string("c c 0.7r 1.0a"), (Color){50, 50, 50, 255}, GRAY);
+    ui_create_checkbox(left_container, constraints_from_string("c c 0.7r 1.0a"), (Color){40, 40, 40, 255}, GRAY);
 
     UIContainer* top_container = ui_create_container(window_get_main_container(main_window), constraints_from_string("80p 10p -90p 60p"));
     ui_create_panel(top_container, constraints_from_string("0r 0r 1r 1r"), GRAY, DARK_GRAY, 2, 2);

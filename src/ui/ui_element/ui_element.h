@@ -1,7 +1,7 @@
-#ifndef UI_WIDGETS_H
-#define UI_WIDGETS_H
+#ifndef UI_ELEMENT_H
+#define UI_ELEMENT_H
 
-#include "../ui_constraints/ui_constraints.h"
+#include "../ui_constraint/ui_constraint.h"
 #include "../../utils/vector/vector.h"
 #include "../../colors/colors.h"
 #include "../../texture/texture.h"
@@ -94,7 +94,6 @@ typedef struct UICheckbox
 	bool checked;
 	Color checked_color;
 	Color unchecked_color;
-	Color border_color;
 	Uint32 corner_radius;
 	MouseState mouse_state;
 } UICheckbox;
