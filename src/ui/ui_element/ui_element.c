@@ -269,6 +269,8 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
         else
             strncat(temp, &items[i], 1);
     }
+    dropdown->items = vector_create(item_count + 1);
+
     UIConstraint height_constraint = constraints.height;
     height_constraint.value *= (double)item_count + 1.0;
     UIConstraint width_constraint = new_pixel_constraint(max_length + 10);
@@ -283,24 +285,17 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     int idx = -1;
     items = strdup(items);
     char* token = strtok(items, ";");
-    dropdown->items = vector_create(item_count + 1);
-    _UIDropdownItem* item = _ui_dropdownitem_create(element, constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click);
-    vector_push_back(dropdown->items, item);
+    vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click));
+    constraints.y = new_offset_constraint(0);
+    constraints.height = new_relative_constraint(1.0 / (double)item_count);
     while (token != NULL)
     {
-        UIConstraints item_constraints = (UIConstraints)
-        {
-            constraints.x,
-            new_offset_constraint(0),
-            width_constraint,
-            height_constraint
-        };
-        item = _ui_dropdownitem_create(element, item_constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click);
-        vector_push_back(dropdown->items, item);
+        vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click));
         token = strtok(NULL, ";");
     }
     free(items);
     dropdown->selected_item = selected_item;
+    strcpy(((_UIDropdownItem*)vector_get(dropdown->items, 0))->text, ((_UIDropdownItem*)vector_get(dropdown->items, dropdown->selected_item + 1))->text);
 
     if (parent->children->size > 0)
         dropdown->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
