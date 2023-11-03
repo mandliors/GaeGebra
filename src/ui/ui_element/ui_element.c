@@ -267,11 +267,11 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     int idx = -1;
     items = strdup(items);
     char* token = strtok(items, ";");
-    vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, _ui_dropdownitem_on_click));
+    vector_push_back(dropdown->items, _ui_dropdownitem_create(dropdown, constraints, idx++, token, _ui_dropdownitem_on_click));
     constraints.y = new_offset_constraint(0);
     while (token != NULL)
     {
-        vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, _ui_dropdownitem_on_click));
+        vector_push_back(dropdown->items, _ui_dropdownitem_create(dropdown, constraints, idx++, token, _ui_dropdownitem_on_click));
         token = strtok(NULL, ";");
     }
     free(items);
@@ -288,17 +288,7 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
         dropdown->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
     else
         dropdown->base.recalculate(NULL, element);
-    if (dropdown->items->size > 0)
-    {
-        UIElement* item = (UIElement*)vector_get(dropdown->items, 0);
-        item ->recalculate(NULL, item);
-        for (size_t i = 1; i < dropdown->items->size; i++)
-        {
-            item = (UIElement*)vector_get(dropdown->items, i);
-            item->recalculate((UIElement*)vector_get(dropdown->items, i - 1), item);
-        }
-    }
-
+    
     if (parent)
         vector_push_back(parent->children, element);
     
@@ -308,7 +298,7 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
 void _ui_container_update(UIElement* self)
 {
     UIContainer* container = (UIContainer*)self;
-    for (size_t i = 0; i < container->children->size; i++)
+    for (int32_t i = container->children->size - 1; i >= 0; i--)
     {
         UIElement* child = (UIElement*)vector_get(container->children, i);
         child->update(child);
@@ -436,13 +426,17 @@ void _ui_button_update(UIElement* self)
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
+        {
             button->mouse_state = MS_PRESS;
+            app_get_active_window()->ui_data.click_handled = true;
+        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
         {
             if (button->on_click)
                 button->on_click(button);
             button->mouse_state = MS_HOVER;
+            app_get_active_window()->ui_data.click_handled = true;
         }
         else if (button->mouse_state == MS_NONE)
             button->mouse_state = MS_HOVER;
@@ -481,8 +475,11 @@ void _ui_imagebutton_update(UIElement* self)
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
+        {
             button->mouse_state = MS_PRESS;
+            app_get_active_window()->ui_data.click_handled = true;
+        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
         {
             if (button->on_click)
@@ -582,8 +579,11 @@ void _ui_textbox_update(UIElement* self)
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
+        {
             textbox->mouse_state = MS_PRESS;
+            app_get_active_window()->ui_data.click_handled = true;
+        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         {
             if (textbox->mouse_state == MS_PRESS)
@@ -631,8 +631,11 @@ void _ui_checkbox_update(UIElement* self)
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
+        {
             checkbox->mouse_state = MS_PRESS;
+            app_get_active_window()->ui_data.click_handled = true;
+        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && checkbox->mouse_state == MS_PRESS)
         {
             checkbox->checked = !checkbox->checked;
@@ -692,8 +695,11 @@ void _ui_slider_update(UIElement* self)
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
+        {
             slider->mouse_state = MS_PRESS;
+            app_get_active_window()->ui_data.click_handled = true;
+        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && slider->mouse_state == MS_PRESS)
             slider->mouse_state = MS_HOVER;
         else if (slider->mouse_state == MS_NONE)
@@ -757,8 +763,11 @@ void _ui_dropdownitem_update(UIElement* self)
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
+        {
             item->mouse_state = MS_PRESS;
+            app_get_active_window()->ui_data.click_handled = true;
+        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && item->mouse_state == MS_PRESS)
         {
             item->mouse_state = MS_NONE;
@@ -789,10 +798,26 @@ void _ui_dropdownitem_destroy(UIElement* self)
     _UIDropdownItem* item = (_UIDropdownItem*)self;
     free(item);
 }
+void _ui_dropdownitem_on_click(_UIDropdownItem* self)
+{
+    UIDropdownList* dropdown = (UIDropdownList*)self->parent_dropdown;
+    if (self->dropdown_index == -1)
+        dropdown->expanded = !dropdown->expanded;
+    else
+    {
+        _UIDropdownItem* top_item = (_UIDropdownItem*)vector_get(dropdown->items, 0);
+        strcpy(top_item->text, self->text);
+        if ((Sint32)dropdown->selected_item != self->dropdown_index && dropdown->on_selection_changed)
+            dropdown->on_selection_changed(dropdown, self->dropdown_index);
+        dropdown->expanded = false;
+        dropdown->selected_item = self->dropdown_index;
+    }
+}
 
 void _ui_dropdown_update(UIElement* self)
 {
     UIDropdownList* dropdown = (UIDropdownList*)self;
+        
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->update(top_item);
     if (dropdown->expanded)
@@ -803,6 +828,10 @@ void _ui_dropdown_update(UIElement* self)
             item->update(item);
         }
     }
+    if (input_is_mouse_button_released(SDL_BUTTON_LEFT) &&
+        !check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+        self->position.x, self->position.y, self->size.x, self->size.y))
+        dropdown->expanded = false;
 }
 void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self)
 {
@@ -847,21 +876,6 @@ void _ui_dropdown_destroy(UIElement* self)
     }
     vector_free(dropdown->items);
     free(dropdown);
-}
-void _ui_dropdownitem_on_click(_UIDropdownItem* self)
-{
-    UIDropdownList* dropdown = (UIDropdownList*)self->parent_dropdown;
-    if (self->dropdown_index == -1)
-        dropdown->expanded = !dropdown->expanded;
-    else
-    {
-        _UIDropdownItem* top_item = (_UIDropdownItem*)vector_get(dropdown->items, 0);
-        strcpy(top_item->text, self->text);
-        if ((Sint32)dropdown->selected_item != self->dropdown_index && dropdown->on_selection_changed)
-            dropdown->on_selection_changed(dropdown, self->dropdown_index);
-        dropdown->expanded = false;
-        dropdown->selected_item = self->dropdown_index;
-    }
 }
 
 void __ui_element_recalculate(UIElement* sibling, UIElement* element)

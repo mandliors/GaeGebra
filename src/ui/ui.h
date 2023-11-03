@@ -8,6 +8,7 @@ typedef struct UIData
 	UIContainer* main_container;
 	char text_input[SDL_TEXTINPUTEVENT_TEXT_SIZE];
 	bool backspace_pressed;
+	bool click_handled;
 } UIData;
 
 //internal functions

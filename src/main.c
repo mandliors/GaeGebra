@@ -13,6 +13,7 @@ int main(void)
 {
     app_init();
     app_set_target_fps(FPS);
+
     Window* main_window = window_create("Test", 800, 600, SDL_WINDOW_RESIZABLE);
 
     Font* font = font_load("../assets/LiberationSerif.ttf", 20);
