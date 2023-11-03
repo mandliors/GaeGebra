@@ -75,6 +75,7 @@ typedef struct UIImageButton
 	void (*on_click)(UIImageButton* self);
 } UIImageButton;
 
+typedef struct UITextbox UITextbox;
 typedef struct UITextbox
 {
 	UIElement base;
@@ -85,8 +86,10 @@ typedef struct UITextbox
 	Uint32 corner_radius;
 	bool focused;
 	MouseState mouse_state;
+	void (*on_text_changed)(UITextbox* self, const char* text);
 } UITextbox;
 
+typedef struct UICheckbox UICheckbox;
 typedef struct UICheckbox
 {
 	UIElement base;
@@ -96,8 +99,10 @@ typedef struct UICheckbox
 	Color unchecked_color;
 	Uint32 corner_radius;
 	MouseState mouse_state;
+	void (*on_checked_changed)(UICheckbox* self, bool checked);
 } UICheckbox;
 
+typedef struct UISlider UISlider; 
 typedef struct UISlider
 {
 	UIElement base;
@@ -108,6 +113,7 @@ typedef struct UISlider
 	Uint32 thickness;
 	Uint32 corner_radius;
 	MouseState mouse_state;
+	void (*on_value_changed)(UISlider* self, double value);
 } UISlider;
 
 typedef struct UIDropdownList UIDropdownList;
@@ -116,23 +122,24 @@ typedef struct _UIDropdownItem
 {
 	UIElement base;
 
-	UIElement* parent_dropdown;
+	UIDropdownList* parent_dropdown;
 	Sint32 dropdown_index;
 	char text[UITEXT_MAX_LENGTH + 1];
-	Color color;
-	Color text_color;
-	Uint32 corner_radius;
 	MouseState mouse_state;
-	void (*on_click)(_UIDropdownItem* self);
+	void (*on_click)(_UIDropdownItem* self);         
 } _UIDropdownItem;
+
 typedef struct UIDropdownList
 {
 	UIElement base;
 
-	UIContainer* items_container;
 	Vector* items;
 	Uint32 selected_item;
 	bool expanded;
+	Color color;
+	Color text_color;
+	Uint32 corner_radius;
+	void (*on_selection_changed)(UIDropdownList* self, Sint32 index);
 } UIDropdownList;
 
 //API functions
@@ -141,10 +148,10 @@ UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color c
 UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const char* text, Color color);
 UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color, void (*on_click)(UIButton* self));
 UIImageButton* ui_create_imagebutton(UIContainer* parent, UIConstraints constraints, Texture* texture, void (*on_click)(UIImageButton* self));
-UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color);
-UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color);
-UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color);
-UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Uint32 selected_item, Color color, Color text_color);
+UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color, void (*on_text_changed)(UITextbox* self, const char* text));
+UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color, void (*on_checked_changed)(UICheckbox* self, bool checked));
+UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color, void (*on_value_changed)(UISlider* self, double value));
+UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_selection_changed)(UIDropdownList* self, Sint32 index));
 
 //internal functions
 void _ui_container_update(UIElement* self);
@@ -187,7 +194,7 @@ void _ui_slider_recalculate(UIElement* sibling, UIElement* self);
 void _ui_slider_render(UIElement* self);
 void _ui_slider_destroy(UIElement* self);
 
-_UIDropdownItem* _ui_dropdownitem_create(UIElement* parent, UIConstraints constraints, Sint32 index, const char* text, Color color, Color text_color, Uint32 corner_radius, void (*on_click)(_UIDropdownItem* self));
+_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text, void (*on_click)(_UIDropdownItem* self));
 void _ui_dropdownitem_update(UIElement* self);
 void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self);
 void _ui_dropdownitem_render(UIElement* self);

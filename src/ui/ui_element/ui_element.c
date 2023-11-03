@@ -149,7 +149,7 @@ UIImageButton* ui_create_imagebutton(UIContainer* parent, UIConstraints constrai
     
     return button;
 }
-UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color)
+UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color, void (*on_text_changed)(UITextbox* self, const char* text))
 {
     UITextbox* textbox = (UITextbox*)malloc(sizeof(UITextbox));
     UIElement* element = (UIElement*)textbox;
@@ -169,6 +169,7 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
     strcpy(textbox->text, text);
     textbox->focused = false;
     textbox->mouse_state = MS_NONE;
+    textbox->on_text_changed = on_text_changed;
 
     if (parent->children->size > 0)
         textbox->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
@@ -180,7 +181,7 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
     
     return textbox;
 }
-UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color)
+UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color, void (*on_checked_changed)(UICheckbox* self, bool checked))
 {
     UICheckbox* checkbox = (UICheckbox*)malloc(sizeof(UICheckbox));
     UIElement* element = (UIElement*)checkbox;
@@ -198,6 +199,8 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
     checkbox->checked_color = checked_color;
     checkbox->unchecked_color = unchecked_color;
     checkbox->corner_radius = 2;
+    checkbox->mouse_state = MS_NONE;
+    checkbox->on_checked_changed = on_checked_changed;
 
     if (parent->children->size > 0)
         checkbox->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
@@ -209,7 +212,7 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
     
     return checkbox;
 }
-UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color)
+UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color, void (*on_value_changed)(UISlider* self, double value))
 {
     UISlider* slider = (UISlider*)malloc(sizeof(UISlider));
     UIElement* element = (UIElement*)slider;
@@ -229,6 +232,7 @@ UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, doubl
     slider->thickness = 7;
     slider->corner_radius = 1;
     slider->mouse_state = MS_NONE;
+    slider->on_value_changed = on_value_changed;
 
     if (parent->children->size > 0)
         slider->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
@@ -240,7 +244,7 @@ UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, doubl
     
     return slider;
 }
-UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Uint32 selected_item, Color color, Color text_color)
+UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_selection_changed)(UIDropdownList* self, Sint32 index))
 {
     UIDropdownList* dropdown = (UIDropdownList*)malloc(sizeof(UIDropdownList));
     UIElement* element = (UIElement*)dropdown;
@@ -254,53 +258,46 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     element->render = _ui_dropdown_render;
     element->destroy = _ui_dropdown_destroy;
 
-    dropdown->expanded = false;
-
     size_t item_count = 1;
-    char temp[50]; int max_length = 0;
     for (size_t i = 0; items[i] != '\0'; i++)
-    {
         if (items[i] == ';')
-        {
             item_count++;
-            max_length = renderer_query_text_size(temp).x;
-            temp[0] = '\0';
-        }
-        else
-            strncat(temp, &items[i], 1);
-    }
     dropdown->items = vector_create(item_count + 1);
-
-    UIConstraint height_constraint = constraints.height;
-    height_constraint.value *= (double)item_count + 1.0;
-    UIConstraint width_constraint = new_pixel_constraint(max_length + 10);
-    dropdown->items_container = ui_create_container(parent, (UIConstraints)
-    {
-        constraints.x,
-        constraints.y,
-        width_constraint,
-        height_constraint
-    });
 
     int idx = -1;
     items = strdup(items);
     char* token = strtok(items, ";");
-    vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click));
+    vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, _ui_dropdownitem_on_click));
     constraints.y = new_offset_constraint(0);
-    constraints.height = new_relative_constraint(1.0 / (double)item_count);
     while (token != NULL)
     {
-        vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, color, text_color, 2, _ui_dropdownitem_on_click));
+        vector_push_back(dropdown->items, _ui_dropdownitem_create(element, constraints, idx++, token, _ui_dropdownitem_on_click));
         token = strtok(NULL, ";");
     }
     free(items);
-    dropdown->selected_item = selected_item;
+    dropdown->selected_item = 0;
     strcpy(((_UIDropdownItem*)vector_get(dropdown->items, 0))->text, ((_UIDropdownItem*)vector_get(dropdown->items, dropdown->selected_item + 1))->text);
+
+    dropdown->expanded = false;
+    dropdown->color = color;
+    dropdown->text_color = text_color;
+    dropdown->corner_radius = 2;
+    dropdown->on_selection_changed = on_selection_changed;
 
     if (parent->children->size > 0)
         dropdown->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
     else
         dropdown->base.recalculate(NULL, element);
+    if (dropdown->items->size > 0)
+    {
+        UIElement* item = (UIElement*)vector_get(dropdown->items, 0);
+        item ->recalculate(NULL, item);
+        for (size_t i = 1; i < dropdown->items->size; i++)
+        {
+            item = (UIElement*)vector_get(dropdown->items, i);
+            item->recalculate((UIElement*)vector_get(dropdown->items, i - 1), item);
+        }
+    }
 
     if (parent)
         vector_push_back(parent->children, element);
@@ -528,9 +525,9 @@ void _ui_textbox_update(UIElement* self)
     UITextbox* textbox = (UITextbox*)self;
     if (textbox->focused) 
     {
+        size_t textlen = strlen(textbox->text);
         if (app_get_active_window()->ui_data.backspace_pressed)
         {
-            size_t textlen = strlen(textbox->text);
             if (input_is_key_down(SDL_SCANCODE_LCTRL) && textlen > 0)
             {
                 bool found = false;
@@ -573,10 +570,13 @@ void _ui_textbox_update(UIElement* self)
         }
         else if (app_get_active_window()->ui_data.text_input[0] != '\0')
         {
-            if (strlen(textbox->text) + strlen(app_get_active_window()->ui_data.text_input) < UITEXT_MAX_LENGTH)
+            if (textlen + strlen(app_get_active_window()->ui_data.text_input) < UITEXT_MAX_LENGTH)
                 strcat(textbox->text, app_get_active_window()->ui_data.text_input);
             app_get_active_window()->ui_data.text_input[0] = '\0';
         }
+        if (strlen(textbox->text) != textlen)
+            if (textbox->on_text_changed)
+                textbox->on_text_changed(textbox, textbox->text);
     }
 
     if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
@@ -637,6 +637,8 @@ void _ui_checkbox_update(UIElement* self)
         {
             checkbox->checked = !checkbox->checked;
             checkbox->mouse_state = MS_HOVER;
+            if (checkbox->on_checked_changed)
+                checkbox->on_checked_changed(checkbox, checkbox->checked);
         }
         else if (checkbox->mouse_state == MS_NONE)
             checkbox->mouse_state = MS_HOVER;
@@ -703,7 +705,11 @@ void _ui_slider_update(UIElement* self)
         slider->mouse_state = MS_NONE;
 
     if (slider->mouse_state == MS_PRESS)
+    {
         slider->value = clamp((input_get_mouse_position().x - self->position.x) / (double)self->size.x, 0.0, 1.0);
+        if (slider->on_value_changed)
+            slider->on_value_changed(slider, slider->value);
+    }
 }
 void _ui_slider_recalculate(UIElement* sibling, UIElement* self)
 {
@@ -723,12 +729,12 @@ void _ui_slider_destroy(UIElement* self)
     free(slider);
 }
 
-_UIDropdownItem* _ui_dropdownitem_create(UIElement* parent, UIConstraints constraints, Sint32 index, const char* text, Color color, Color text_color, Uint32 corner_radius, void (*on_click)(_UIDropdownItem* self))
+_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text, void (*on_click)(_UIDropdownItem* self))
 {
     _UIDropdownItem* item = (_UIDropdownItem*)malloc(sizeof(_UIDropdownItem));
     UIElement* element = (UIElement*)item;
     
-    element->parent = parent->parent;
+    element->parent = parent->base.parent;
     element->constraints = constraints;
     element->position = (Vector2){0, 0};
     element->size = (Vector2){0, 0};
@@ -740,9 +746,6 @@ _UIDropdownItem* _ui_dropdownitem_create(UIElement* parent, UIConstraints constr
     item->parent_dropdown = parent;
     item->dropdown_index = index;
     strcpy(item->text, text);
-    item->color = color;
-    item->text_color = text_color;
-    item->corner_radius = corner_radius;
     item->mouse_state = MS_NONE;
     item->on_click = on_click;
 
@@ -776,9 +779,10 @@ void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self)
 void _ui_dropdownitem_render(UIElement* self)
 {
     _UIDropdownItem* item = (_UIDropdownItem*)self;
-    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->corner_radius, item->mouse_state == MS_PRESS ? color_shift(item->color, 15) : (item->mouse_state == MS_HOVER ? color_shift(item->color, 10) : item->color));
-    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->corner_radius, item->color);
-    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), item->text_color);
+    int shift = item->dropdown_index == -1 ? 0 : 8;
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius, item->mouse_state == MS_PRESS ? color_shift(item->parent_dropdown->color, 15 + shift) : (item->mouse_state == MS_HOVER ? color_shift(item->parent_dropdown->color, 10 + shift) : color_shift(item->parent_dropdown->color, shift)));
+    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius, color_shift(item->parent_dropdown->color, shift));
+    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), color_shift(item->parent_dropdown->text_color, shift));
 }
 void _ui_dropdownitem_destroy(UIElement* self)
 {
@@ -806,14 +810,11 @@ void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self)
     UIDropdownList* dropdown = (UIDropdownList*)self;
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->recalculate(sibling, top_item);
-    if (dropdown->expanded)
+    
+    for (size_t i = 1; i < dropdown->items->size; i++)
     {
-        UIDropdownList* dropdown = (UIDropdownList*)self;
-        for (size_t i = 1; i < dropdown->items->size; i++)
-        {
-            UIElement* item = (UIElement*)vector_get(dropdown->items, i);
-            item->recalculate((UIElement*)vector_get(dropdown->items, i - 1), item);
-        }
+        UIElement* item = (UIElement*)vector_get(dropdown->items, i);
+        item->recalculate((UIElement*)vector_get(dropdown->items, i - 1), item);
     }
 }
 void _ui_dropdown_render(UIElement* self)
@@ -829,6 +830,12 @@ void _ui_dropdown_render(UIElement* self)
             item->render(item);
         }
     }
+    double arrow_size = 0.35;
+    Vector2 arrow_pos = (Vector2){self->position.x + self->size.x - (int)round(self->size.y * arrow_size) - 10,
+                                  self->position.y + (int)round(self->size.y * (1 - arrow_size) * 0.5)};
+    renderer_draw_filled_triangle(arrow_pos.x, arrow_pos.y, arrow_pos.x + (int)round(self->size.y * arrow_size),
+                                  arrow_pos.y, arrow_pos.x + (int)round(self->size.y * arrow_size * 0.5),
+                                  arrow_pos.y + (int)round(self->size.y * arrow_size), dropdown->text_color);
 }
 void _ui_dropdown_destroy(UIElement* self)
 {
@@ -845,11 +852,13 @@ void _ui_dropdownitem_on_click(_UIDropdownItem* self)
 {
     UIDropdownList* dropdown = (UIDropdownList*)self->parent_dropdown;
     if (self->dropdown_index == -1)
-        dropdown->expanded = true;
+        dropdown->expanded = !dropdown->expanded;
     else
     {
         _UIDropdownItem* top_item = (_UIDropdownItem*)vector_get(dropdown->items, 0);
         strcpy(top_item->text, self->text);
+        if ((Sint32)dropdown->selected_item != self->dropdown_index && dropdown->on_selection_changed)
+            dropdown->on_selection_changed(dropdown, self->dropdown_index);
         dropdown->expanded = false;
         dropdown->selected_item = self->dropdown_index;
     }
