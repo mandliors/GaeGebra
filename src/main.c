@@ -1,6 +1,6 @@
-#include <stdio.h>
-
 #include "includes.h"
+
+#include <stdio.h>
 
 #define FPS 60
 
@@ -15,6 +15,7 @@ int main(void)
     app_set_target_fps(FPS);
 
     Window* main_window = window_create("Test", 800, 600, SDL_WINDOW_RESIZABLE);
+    Window* popup = window_create("Popup", 400, 300, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALWAYS_ON_TOP);
 
     Font* font = font_load("../assets/LiberationSerif.ttf", 20);
     renderer_set_default_font(font);
@@ -43,6 +44,7 @@ int main(void)
     while (!main_window->close_requested)
     {
         app_update();
+        renderer_set_target(main_window);
         renderer_clear(GRAY);
         app_render();
     }

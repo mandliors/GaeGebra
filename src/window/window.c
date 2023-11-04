@@ -9,6 +9,7 @@
 #include "window.h"
 #include "../app/app.h"
 #include "../input/input.h"
+#include "../renderer/renderer.h"
 
 Window* window_create(const char* title, int width, int height, int flags)
 {
@@ -78,11 +79,14 @@ void _window_handle_event(Window* window, SDL_Event* event)
 }
 void _window_update(Window* window)
 {
+    input_set_target(window);
     _ui_update(&window->ui_data);
 }
 void _window_render(Window* window)
 {
+    renderer_set_target(window);
     _ui_render(&window->ui_data);
+    SDL_RenderPresent(window->renderer);
 }
 void _window_close(Window* window)
 {

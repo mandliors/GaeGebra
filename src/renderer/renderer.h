@@ -9,12 +9,13 @@
     #include <SDL2/SDL2_gfxPrimitives.h>
 #endif
 
+#include "../window/window.h"
 #include "../colors/colors.h"
 #include "../font/font.h"
 #include "../texture/texture.h"
 #include "../defines.h"
 
-void renderer_set_target(SDL_Renderer* target);
+void renderer_set_target(Window* window);
 void renderer_set_default_font(Font* font);
 void renderer_clear(Color color);
 

@@ -4,9 +4,9 @@
 SDL_Renderer* renderer;
 Font* default_font;
 
-void renderer_set_target(SDL_Renderer* target)
+void renderer_set_target(Window* window)
 {
-	renderer = target;
+	renderer = window->renderer;
 }
 void renderer_set_default_font(Font* font)
 {

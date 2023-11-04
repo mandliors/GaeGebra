@@ -62,7 +62,6 @@ void app_render()
     {
 		Window* window = (Window*)vector_get(app_data.windows, i);
         _window_render(window);
-		SDL_RenderPresent(window->renderer);
 	}
     Uint32 frame_time = SDL_GetTicks() - app_data.frame_start;
     if (frame_time < app_data.target_frame_time)

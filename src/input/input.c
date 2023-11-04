@@ -4,47 +4,54 @@
 #include "../window/window.h"
 #include "../app/app.h"
 
+InputData* input;
+
+void input_set_target(Window* window)
+{
+    input = &window->input_data;
+}
+
 bool input_is_mouse_button_down(int button)
 {
     assert(app_get_active_window()); //there is no window
-    return app_get_active_window()->input_data.current_mouse_button_state[button];
+    return input->current_mouse_button_state[button];
 }
 bool input_is_mouse_button_pressed(int button)
 {
     assert(app_get_active_window()); //there is no window
-    return app_get_active_window()->input_data.current_mouse_button_state[button] && !app_get_active_window()->input_data.old_mouse_button_state[button];
+    return input->current_mouse_button_state[button] && !input->old_mouse_button_state[button];
 }
 bool input_is_mouse_button_released(int button)
 {
     assert(app_get_active_window()); //there is no window
-    return !app_get_active_window()->input_data.current_mouse_button_state[button] && app_get_active_window()->input_data.old_mouse_button_state[button];
+    return !input->current_mouse_button_state[button] && input->old_mouse_button_state[button];
 }
 
 bool input_is_key_down(int key)
 {
     assert(app_get_active_window()); //there is no window
-    return app_get_active_window()->input_data.current_keyboard_state[key];
+    return input->current_keyboard_state[key];
 }
 bool input_is_key_pressed(int key)
 {
     assert(app_get_active_window()); //there is no window
-    return app_get_active_window()->input_data.current_keyboard_state[key] && !app_get_active_window()->input_data.old_keyboard_state[key];
+    return input->current_keyboard_state[key] && !input->old_keyboard_state[key];
 }
 bool input_is_key_released(int key)
 {
     assert(app_get_active_window()); //there is no window
-    return !app_get_active_window()->input_data.current_keyboard_state[key] && app_get_active_window()->input_data.old_keyboard_state[key];
+    return !input->current_keyboard_state[key] && input->old_keyboard_state[key];
 }
 
 SDL_Point input_get_mouse_position()
 {
     assert(app_get_active_window()); //there is no window
-    return app_get_active_window()->input_data.mouse_position;
+    return input->mouse_position;
 }
 int input_get_mouse_wheel_delta()
 {
     assert(app_get_active_window()); //there is no window
-    return app_get_active_window()->input_data.mouse_wheel_delta;
+    return input->mouse_wheel_delta;
 }
 
 void _input_init(InputData* input_data)

@@ -800,7 +800,7 @@ void _ui_slider_destroy(UIElement* self)
 
 void _ui_dropdown_update(UIElement* self)
 {
-    UIDropdownList* dropdown = (UIDropdownList*)self;        
+    UIDropdownList* dropdown = (UIDropdownList*)self;
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->update(top_item);
     if (dropdown->expanded)
