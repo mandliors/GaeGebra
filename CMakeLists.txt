@@ -36,7 +36,7 @@ target_sources(coordinate_geometry PRIVATE
     src/utils/vector/vector.c
     src/window/window.c
 )
-target_include_directories(coordinate_geometry PRIVATE include/chess)
+target_include_directories(coordinate_geometry PRIVATE src)
 target_compile_options(coordinate_geometry PRIVATE -Wall -Wextra -Wpedantic) #-Wconversion
 target_link_libraries(coordinate_geometry PRIVATE
     SDL2::Main
