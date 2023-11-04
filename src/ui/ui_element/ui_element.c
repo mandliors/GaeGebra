@@ -267,11 +267,11 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     int idx = -1;
     items = strdup(items);
     char* token = strtok(items, ";");
-    vector_push_back(dropdown->items, _ui_dropdownitem_create(dropdown, constraints, idx++, token, _ui_dropdownitem_on_click));
+    vector_push_back(dropdown->items, _ui_dropdownitem_create(dropdown, constraints, idx++, token));
     constraints.y = new_offset_constraint(0);
     while (token != NULL)
     {
-        vector_push_back(dropdown->items, _ui_dropdownitem_create(dropdown, constraints, idx++, token, _ui_dropdownitem_on_click));
+        vector_push_back(dropdown->items, _ui_dropdownitem_create(dropdown, constraints, idx++, token));
         token = strtok(NULL, ";");
     }
     free(items);
@@ -293,6 +293,69 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
         vector_push_back(parent->children, element);
     
     return dropdown;
+}
+UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_item_clicked)(UISplitButton* self, Sint32 index))
+{
+    UISplitButton* splitbutton = (UISplitButton*)malloc(sizeof(UISplitButton));
+    UIElement* element = (UIElement*)splitbutton;
+    
+    element->parent = (UIElement*)parent;
+    element->position = (Vector2){0, 0};
+    element->size = (Vector2){0, 0};
+    element->update = _ui_splitbutton_update;
+    element->recalculate = _ui_splitbutton_recalculate;
+    element->render = _ui_splitbutton_render;
+    element->destroy = _ui_splitbutton_destroy;
+
+    size_t item_count = 1;
+    char temp[50]; int max_length = 0;
+    int length;
+    for (size_t i = 0; items[i] != '\0'; i++)
+    {
+        if (items[i] == ';')
+        {
+            item_count++;
+            length = renderer_query_text_size(temp).x;
+            if (length > max_length)
+                max_length = length;
+            temp[0] = '\0';
+        }
+        else
+            strncat(temp, items + i, 1);
+    }
+    splitbutton->items = vector_create(item_count);
+
+    int idx = -1;
+    items = strdup(items);
+    char* token = strtok(items, ";");
+    constraints.width = new_pixel_constraint(renderer_query_text_size(token).x + 20);
+    vector_push_back(splitbutton->items, _ui_splitbuttonitem_create((UISplitButton*)splitbutton, constraints, idx++, token));
+    element->constraints = constraints;
+    constraints.y = new_offset_constraint(0);
+    constraints.width = new_pixel_constraint(max_length + 20);
+    token = strtok(NULL, ";");
+    while (token != NULL)
+    {
+        vector_push_back(splitbutton->items, _ui_splitbuttonitem_create((UISplitButton*)splitbutton, constraints, idx++, token));
+        token = strtok(NULL, ";");
+    }
+    free(items);
+
+    splitbutton->expanded = false;
+    splitbutton->color = color;
+    splitbutton->text_color = text_color;
+    splitbutton->corner_radius = 2;
+    splitbutton->on_item_clicked = on_item_clicked;
+
+    if (parent->children->size > 0)
+        splitbutton->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
+    else
+        splitbutton->base.recalculate(NULL, element);
+
+    if (parent)
+        vector_push_back(parent->children, element);
+
+    return splitbutton;
 }
 
 void _ui_container_update(UIElement* self)
@@ -368,7 +431,12 @@ void _ui_container_destroy(UIElement* self)
     free(container);
 }
 
-void _ui_panel_update(UIElement* self) { }
+void _ui_panel_update(UIElement* self)
+{
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+                                   self->position.x, self->position.y, self->size.x, self->size.y))
+        app_get_active_window()->ui_data.mouse_captured = true;
+}
 void _ui_panel_recalculate(UIElement* sibling, UIElement* self)
 {
     __ui_element_recalculate(sibling, self);
@@ -386,7 +454,13 @@ void _ui_panel_destroy(UIElement* self)
     free(panel);
 }
 
-void _ui_label_update(UIElement* self) { }
+void _ui_label_update(UIElement* self)
+{
+    Vector2 size = renderer_query_text_size(((UILabel*)self)->text);
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+                                   self->position.x, self->position.y, size.x, size.y))
+        app_get_active_window()->ui_data.mouse_captured = true;
+}
 void _ui_label_recalculate(UIElement* sibling, UIElement* self)
 {
     //recalculate size
@@ -423,23 +497,20 @@ void _ui_label_destroy(UIElement* self)
 void _ui_button_update(UIElement* self)
 {
     UIButton* button = (UIButton*)self;
-    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
-        {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             button->mouse_state = MS_PRESS;
-            app_get_active_window()->ui_data.click_handled = true;
-        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
         {
             if (button->on_click)
                 button->on_click(button);
             button->mouse_state = MS_HOVER;
-            app_get_active_window()->ui_data.click_handled = true;
         }
         else if (button->mouse_state == MS_NONE)
             button->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
     }
     else if (button->mouse_state != MS_PRESS)
         button->mouse_state = MS_NONE;
@@ -472,14 +543,11 @@ void _ui_button_destroy(UIElement* self)
 void _ui_imagebutton_update(UIElement* self)
 {
     UIImageButton* button = (UIImageButton*)self;
-    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
-        {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             button->mouse_state = MS_PRESS;
-            app_get_active_window()->ui_data.click_handled = true;
-        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && button->mouse_state == MS_PRESS)
         {
             if (button->on_click)
@@ -488,6 +556,7 @@ void _ui_imagebutton_update(UIElement* self)
         }
         else if (button->mouse_state == MS_NONE)
             button->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
     }
     else if (button->mouse_state != MS_PRESS)
         button->mouse_state = MS_NONE;
@@ -576,14 +645,11 @@ void _ui_textbox_update(UIElement* self)
                 textbox->on_text_changed(textbox, textbox->text);
     }
 
-    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
-        {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             textbox->mouse_state = MS_PRESS;
-            app_get_active_window()->ui_data.click_handled = true;
-        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
         {
             if (textbox->mouse_state == MS_PRESS)
@@ -597,6 +663,7 @@ void _ui_textbox_update(UIElement* self)
         }
         else if (textbox->mouse_state == MS_NONE)
             textbox->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
     }
     else if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
     {
@@ -628,14 +695,11 @@ void _ui_textbox_destroy(UIElement* self)
 void _ui_checkbox_update(UIElement* self)
 {
     UICheckbox* checkbox = (UICheckbox*)self;
-    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
-        {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             checkbox->mouse_state = MS_PRESS;
-            app_get_active_window()->ui_data.click_handled = true;
-        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && checkbox->mouse_state == MS_PRESS)
         {
             checkbox->checked = !checkbox->checked;
@@ -645,6 +709,7 @@ void _ui_checkbox_update(UIElement* self)
         }
         else if (checkbox->mouse_state == MS_NONE)
             checkbox->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
     }
     else if (checkbox->mouse_state != MS_PRESS)
         checkbox->mouse_state = MS_NONE;
@@ -692,18 +757,16 @@ void _ui_checkbox_destroy(UIElement* self)
 void _ui_slider_update(UIElement* self)
 {
     UISlider* slider = (UISlider*)self;
-    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
     {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
-        {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             slider->mouse_state = MS_PRESS;
-            app_get_active_window()->ui_data.click_handled = true;
-        }
         else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && slider->mouse_state == MS_PRESS)
             slider->mouse_state = MS_HOVER;
         else if (slider->mouse_state == MS_NONE)
             slider->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
     }
     else if (slider->mouse_state != MS_PRESS)
         slider->mouse_state = MS_NONE;
@@ -735,89 +798,9 @@ void _ui_slider_destroy(UIElement* self)
     free(slider);
 }
 
-_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text, void (*on_click)(_UIDropdownItem* self))
-{
-    _UIDropdownItem* item = (_UIDropdownItem*)malloc(sizeof(_UIDropdownItem));
-    UIElement* element = (UIElement*)item;
-    
-    element->parent = parent->base.parent;
-    element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
-    element->update = _ui_dropdownitem_update;
-    element->recalculate = _ui_dropdownitem_recalculate;
-    element->render = _ui_dropdownitem_render;
-    element->destroy = _ui_dropdownitem_destroy;
-
-    item->parent_dropdown = parent;
-    item->dropdown_index = index;
-    strcpy(item->text, text);
-    item->mouse_state = MS_NONE;
-    item->on_click = on_click;
-
-    return item;
-}
-void _ui_dropdownitem_update(UIElement* self)
-{
-    _UIDropdownItem* item = (_UIDropdownItem*)self;
-    if (check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
-                                   self->position.x, self->position.y, self->size.x, self->size.y))
-    {
-        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !app_get_active_window()->ui_data.click_handled)
-        {
-            item->mouse_state = MS_PRESS;
-            app_get_active_window()->ui_data.click_handled = true;
-        }
-        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && item->mouse_state == MS_PRESS)
-        {
-            item->mouse_state = MS_NONE;
-            item->on_click(item);
-        }
-        else if (item->mouse_state == MS_NONE)
-            item->mouse_state = MS_HOVER;
-    }
-    else if (item->mouse_state != MS_PRESS)
-        item->mouse_state = MS_NONE;
-    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
-        item->mouse_state = MS_NONE;
-}
-void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self)
-{
-    __ui_element_recalculate(sibling, self);
-}
-void _ui_dropdownitem_render(UIElement* self)
-{
-    _UIDropdownItem* item = (_UIDropdownItem*)self;
-    int shift = item->dropdown_index == -1 ? 0 : 8;
-    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius, item->mouse_state == MS_PRESS ? color_shift(item->parent_dropdown->color, 15 + shift) : (item->mouse_state == MS_HOVER ? color_shift(item->parent_dropdown->color, 10 + shift) : color_shift(item->parent_dropdown->color, shift)));
-    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius, color_shift(item->parent_dropdown->color, shift));
-    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), color_shift(item->parent_dropdown->text_color, shift));
-}
-void _ui_dropdownitem_destroy(UIElement* self)
-{
-    _UIDropdownItem* item = (_UIDropdownItem*)self;
-    free(item);
-}
-void _ui_dropdownitem_on_click(_UIDropdownItem* self)
-{
-    UIDropdownList* dropdown = (UIDropdownList*)self->parent_dropdown;
-    if (self->dropdown_index == -1)
-        dropdown->expanded = !dropdown->expanded;
-    else
-    {
-        _UIDropdownItem* top_item = (_UIDropdownItem*)vector_get(dropdown->items, 0);
-        strcpy(top_item->text, self->text);
-        if ((Sint32)dropdown->selected_item != self->dropdown_index && dropdown->on_selection_changed)
-            dropdown->on_selection_changed(dropdown, self->dropdown_index);
-        dropdown->expanded = false;
-        dropdown->selected_item = self->dropdown_index;
-    }
-}
-
 void _ui_dropdown_update(UIElement* self)
 {
-    UIDropdownList* dropdown = (UIDropdownList*)self;
-        
+    UIDropdownList* dropdown = (UIDropdownList*)self;        
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->update(top_item);
     if (dropdown->expanded)
@@ -876,6 +859,222 @@ void _ui_dropdown_destroy(UIElement* self)
     }
     vector_free(dropdown->items);
     free(dropdown);
+}
+
+_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text)
+{
+    _UIDropdownItem* item = (_UIDropdownItem*)malloc(sizeof(_UIDropdownItem));
+    UIElement* element = (UIElement*)item;
+    
+    element->parent = parent->base.parent;
+    element->constraints = constraints;
+    element->position = (Vector2){0, 0};
+    element->size = (Vector2){0, 0};
+    element->update = _ui_dropdownitem_update;
+    element->recalculate = _ui_dropdownitem_recalculate;
+    element->render = _ui_dropdownitem_render;
+    element->destroy = _ui_dropdownitem_destroy;
+
+    item->parent_dropdown = parent;
+    item->dropdown_index = index;
+    strcpy(item->text, text);
+    item->mouse_state = MS_NONE;
+
+    return item;
+}
+void _ui_dropdownitem_update(UIElement* self)
+{
+    _UIDropdownItem* item = (_UIDropdownItem*)self;
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+                                   self->position.x, self->position.y, self->size.x, self->size.y))
+    {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+            item->mouse_state = MS_PRESS;
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && item->mouse_state == MS_PRESS)
+        {
+            item->mouse_state = MS_NONE;
+            _ui_dropdownitem_on_click(item);
+        }
+        else if (item->mouse_state == MS_NONE)
+            item->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
+    }
+    else if (item->mouse_state != MS_PRESS)
+        item->mouse_state = MS_NONE;
+    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+        item->mouse_state = MS_NONE;
+}
+void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self)
+{
+    __ui_element_recalculate(sibling, self);
+    self->position.x = ((_UIDropdownItem*)self)->parent_dropdown->base.position.x;
+}
+void _ui_dropdownitem_render(UIElement* self)
+{
+    _UIDropdownItem* item = (_UIDropdownItem*)self;
+    int shift = item->dropdown_index == -1 ? 0 : 8;
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius,
+                                      item->mouse_state == MS_PRESS ? color_shift(item->parent_dropdown->color, 15 + shift)
+                                      : (item->mouse_state == MS_HOVER ? color_shift(item->parent_dropdown->color, 10 + shift)
+                                      : color_shift(item->parent_dropdown->color, shift)));
+    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y,
+                               item->parent_dropdown->corner_radius, color_shift(item->parent_dropdown->color, shift));
+    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), color_shift(item->parent_dropdown->text_color, shift));
+}
+void _ui_dropdownitem_destroy(UIElement* self)
+{
+    _UIDropdownItem* item = (_UIDropdownItem*)self;
+    free(item);
+}
+void _ui_dropdownitem_on_click(_UIDropdownItem* self)
+{
+    UIDropdownList* dropdown = (UIDropdownList*)self->parent_dropdown;
+    if (self->dropdown_index == -1)
+        dropdown->expanded = !dropdown->expanded;
+    else
+    {
+        _UIDropdownItem* top_item = (_UIDropdownItem*)vector_get(dropdown->items, 0);
+        strcpy(top_item->text, self->text);
+        if ((Sint32)dropdown->selected_item != self->dropdown_index && dropdown->on_selection_changed)
+            dropdown->on_selection_changed(dropdown, self->dropdown_index);
+        dropdown->expanded = false;
+        dropdown->selected_item = self->dropdown_index;
+    }
+}
+
+void _ui_splitbutton_update(UIElement* self)
+{
+    UISplitButton* splitbutton = (UISplitButton*)self;        
+    UIElement* top_item = (UIElement*)vector_get(splitbutton->items, 0);
+    top_item->update(top_item);
+    if (splitbutton->expanded)
+    {
+        for (size_t i = 1; i < splitbutton->items->size; i++)
+        {
+            UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
+            item->update(item);
+        }
+    }
+    if (input_is_mouse_button_released(SDL_BUTTON_LEFT) &&
+        !check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+        self->position.x, self->position.y, self->size.x, self->size.y))
+        splitbutton->expanded = false;
+}
+void _ui_splitbutton_recalculate(UIElement* sibling, UIElement* self)
+{
+    __ui_element_recalculate(sibling, self);
+    UISplitButton* splitbutton = (UISplitButton*)self;
+    UIElement* top_item = (UIElement*)vector_get(splitbutton->items, 0);
+    top_item->recalculate(sibling, top_item);
+    
+    for (size_t i = 1; i < splitbutton->items->size; i++)
+    {
+        UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
+        item->recalculate((UIElement*)vector_get(splitbutton->items, i - 1), item);
+    }
+}
+void _ui_splitbutton_render(UIElement* self)
+{
+    UISplitButton* splitbutton = (UISplitButton*)self;
+    UIElement* top_item = (UIElement*)vector_get(splitbutton->items, 0);
+    top_item->render(top_item);
+    if (splitbutton->expanded)
+    {
+        for (size_t i = 0; i < splitbutton->items->size; i++)
+        {
+            UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
+            item->render(item);
+        }
+    }
+}
+void _ui_splitbutton_destroy(UIElement* self)
+{
+    UISplitButton* splitbutton = (UISplitButton*)self;
+    for (size_t i = 0; i < splitbutton->items->size; i++)
+    {
+        UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
+        item->destroy(item);
+    }
+    vector_free(splitbutton->items);
+    free(splitbutton);
+}
+
+_UISplitButtonItem* _ui_splitbuttonitem_create(UISplitButton* parent, UIConstraints constraints, Sint32 index, const char* text)
+{
+    _UISplitButtonItem* item = (_UISplitButtonItem*)malloc(sizeof(_UISplitButtonItem));
+    UIElement* element = (UIElement*)item;
+    
+    element->parent = parent->base.parent;
+    element->constraints = constraints;
+    element->position = (Vector2){0, 0};
+    element->size = (Vector2){0, 0};
+    element->update = _ui_splitbuttonitem_update;
+    element->recalculate = _ui_splitbuttonitem_recalculate;
+    element->render = _ui_splitbuttonitem_render;
+    element->destroy = _ui_splitbuttonitem_destroy;
+
+    item->parent_splitbutton = parent;
+    item->splitbutton_index = index;
+    strcpy(item->text, text);
+    item->mouse_state = MS_NONE;
+
+    return item;
+}
+void _ui_splitbuttonitem_update(UIElement* self)
+{
+    _UISplitButtonItem* item = (_UISplitButtonItem*)self;
+    if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
+                                   self->position.x, self->position.y, self->size.x, self->size.y))
+    {
+        if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
+            item->mouse_state = MS_PRESS;
+        else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && item->mouse_state == MS_PRESS)
+        {
+            item->mouse_state = MS_NONE;
+            _ui_splitbuttonitem_on_click(item);
+        }
+        else if (item->mouse_state == MS_NONE)
+            item->mouse_state = MS_HOVER;
+        app_get_active_window()->ui_data.mouse_captured = true;
+    }
+    else if (item->mouse_state != MS_PRESS)
+        item->mouse_state = MS_NONE;
+    else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+        item->mouse_state = MS_NONE;
+}
+void _ui_splitbuttonitem_recalculate(UIElement* sibling, UIElement* self)
+{
+    __ui_element_recalculate(sibling, self);
+    self->position.x = ((_UISplitButtonItem*)self)->parent_splitbutton->base.position.x;
+}
+void _ui_splitbuttonitem_render(UIElement* self)
+{
+    _UISplitButtonItem* item = (_UISplitButtonItem*)self;
+    int shift = item->splitbutton_index == -1 ? 0 : 8;
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_splitbutton->corner_radius,
+                                      item->mouse_state == MS_PRESS ? color_shift(item->parent_splitbutton->color, 15 + shift)
+                                      : (item->mouse_state == MS_HOVER ? color_shift(item->parent_splitbutton->color, 10 + shift)
+                                      : color_shift(item->parent_splitbutton->color, shift)));
+    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y,
+                               item->parent_splitbutton->corner_radius, color_shift(item->parent_splitbutton->color, shift));
+    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), color_shift(item->parent_splitbutton->text_color, shift));
+}
+void _ui_splitbuttonitem_destroy(UIElement* self)
+{
+    _UISplitButtonItem* item = (_UISplitButtonItem*)self;
+    free(item);
+}
+void _ui_splitbuttonitem_on_click(_UISplitButtonItem* self)
+{
+    UISplitButton* splitbutton = (UISplitButton*)self->parent_splitbutton;
+    if (self->splitbutton_index == -1)
+        splitbutton->expanded = !splitbutton->expanded;
+    else
+    {
+        if (splitbutton->on_item_clicked)
+            splitbutton->on_item_clicked(splitbutton, self->splitbutton_index);
+        splitbutton->expanded = false;
+    }
 }
 
 void __ui_element_recalculate(UIElement* sibling, UIElement* element)
@@ -939,7 +1138,7 @@ int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int 
             if (sibling_position > 0)
                 return (int)round(sibling_position + sibling_size + constraint->value);
             else
-                return (int)round(parent_position + constraint->value);
+                return (int)round(parent_position + sibling_size + constraint->value);
         default: //CT_ASPECT
             return -1;
     }

@@ -25,7 +25,7 @@ void _ui_handle_event(UIData* ui_data, SDL_Event* event)
 }
 void _ui_update(UIData* ui_data)
 {
-    ui_data->click_handled = false;
+    ui_data->mouse_captured = false;
     _ui_container_update((UIElement*)ui_data->main_container);
 }
 void _ui_render(UIData* ui_data)

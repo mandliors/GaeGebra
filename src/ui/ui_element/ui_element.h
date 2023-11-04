@@ -126,7 +126,6 @@ typedef struct _UIDropdownItem
 	Sint32 dropdown_index;
 	char text[UITEXT_MAX_LENGTH + 1];
 	MouseState mouse_state;
-	void (*on_click)(_UIDropdownItem* self);         
 } _UIDropdownItem;
 
 typedef struct UIDropdownList
@@ -142,6 +141,30 @@ typedef struct UIDropdownList
 	void (*on_selection_changed)(UIDropdownList* self, Sint32 index);
 } UIDropdownList;
 
+typedef struct UISplitButton UISplitButton;
+typedef struct _UISplitButtonItem _UISplitButtonItem;
+typedef struct _UISplitButtonItem
+{
+	UIElement base;
+
+	UISplitButton* parent_splitbutton;
+	Sint32 splitbutton_index;
+	char text[UITEXT_MAX_LENGTH + 1];
+	MouseState mouse_state;
+} _UISplitButtonItem;
+
+typedef struct UISplitButton
+{
+	UIElement base;
+
+	Vector* items;
+	bool expanded;
+	Color color;
+	Color text_color;
+	Uint32 corner_radius;
+	void (*on_item_clicked)(UISplitButton* self, Sint32 index);
+} UISplitButton;
+
 //API functions
 UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints);
 UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color color, Color border_color, Uint32 border_width, Uint32 roundness);
@@ -152,6 +175,7 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
 UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color, void (*on_checked_changed)(UICheckbox* self, bool checked));
 UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color, void (*on_value_changed)(UISlider* self, double value));
 UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_selection_changed)(UIDropdownList* self, Sint32 index));
+UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_item_clicked)(UISplitButton* self, Sint32 index));
 
 //internal functions
 void _ui_container_update(UIElement* self);
@@ -194,17 +218,29 @@ void _ui_slider_recalculate(UIElement* sibling, UIElement* self);
 void _ui_slider_render(UIElement* self);
 void _ui_slider_destroy(UIElement* self);
 
-_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text, void (*on_click)(_UIDropdownItem* self));
+void _ui_dropdown_update(UIElement* self);
+void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self);
+void _ui_dropdown_render(UIElement* self);
+void _ui_dropdown_destroy(UIElement* self);
+
+_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text);
 void _ui_dropdownitem_update(UIElement* self);
 void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self);
 void _ui_dropdownitem_render(UIElement* self);
 void _ui_dropdownitem_destroy(UIElement* self);
 void _ui_dropdownitem_on_click(_UIDropdownItem* self);
 
-void _ui_dropdown_update(UIElement* self);
-void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self);
-void _ui_dropdown_render(UIElement* self);
-void _ui_dropdown_destroy(UIElement* self);
+void _ui_splitbutton_update(UIElement* self);
+void _ui_splitbutton_recalculate(UIElement* sibling, UIElement* self);
+void _ui_splitbutton_render(UIElement* self);
+void _ui_splitbutton_destroy(UIElement* self);
+
+_UISplitButtonItem* _ui_splitbuttonitem_create(UISplitButton* parent, UIConstraints constraints, Sint32 index, const char* text);
+void _ui_splitbuttonitem_update(UIElement* self);
+void _ui_splitbuttonitem_recalculate(UIElement* sibling, UIElement* self);
+void _ui_splitbuttonitem_render(UIElement* self);
+void _ui_splitbuttonitem_destroy(UIElement* self);
+void _ui_splitbuttonitem_on_click(_UISplitButtonItem* self);
 
 void __ui_element_recalculate(UIElement* sibling, UIElement* element);
 int __ui_calculate_size(UIConstraint* constraint, int parent_size);
