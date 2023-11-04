@@ -105,9 +105,9 @@ void renderer_draw_text(const char* text, int x, int y, Color color)
 	SDL_FreeSurface(surface);
 	SDL_DestroyTexture(texture);
 }
-Vector2 renderer_query_text_size(const char* text)
+SDL_Point renderer_query_text_size(const char* text)
 {
-	Vector2 size = { 0, 0 };
+	SDL_Point size = { 0, 0 };
 	if (default_font == NULL)
 		return size;		
 	TTF_SizeUTF8(default_font->font, text, &size.x, &size.y);

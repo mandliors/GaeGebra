@@ -1,5 +1,4 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
 
 #ifdef _WIN32
     #include <SDL.h>
@@ -43,5 +42,3 @@ void _input_init(InputData* input_data);
 void _input_handle_event(InputData* input_data, SDL_Event* event);
 void _input_reset(InputData* input_data);
 void _input_close(InputData* input_data);
-
-#endif

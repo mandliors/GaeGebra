@@ -1,5 +1,3 @@
-#include <assert.h>
-
 #include "texture.h"
 #include "../utils/vector/vector.h"
 
@@ -8,7 +6,11 @@ Vector* textures;
 Texture* texture_load(SDL_Renderer* renderer, const char* path)
 {
 	Texture* texture = (Texture*)malloc(sizeof(Texture));
-	assert(texture); //couldn't allocate memory
+	if (texture == NULL)
+	{
+		printf("failed to allocate memory for texture\n");
+		exit(1);
+	}
 	SDL_Texture* tex = IMG_LoadTexture(renderer, path);
 	SDL_QueryTexture(tex, NULL, NULL, &texture->width, &texture->height);
 	texture->texture = tex;

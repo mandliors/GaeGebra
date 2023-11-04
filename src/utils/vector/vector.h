@@ -1,5 +1,4 @@
-#ifndef VECTOR_H_
-#define VECTOR_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -16,5 +15,3 @@ void* vector_get(Vector* vector, size_t idx);
 void vector_push_back(Vector* vector, void* value);
 void vector_reserve(Vector* vector, size_t capacity);
 void vector_clear(Vector* vector);
-
-#endif

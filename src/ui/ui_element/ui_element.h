@@ -1,12 +1,16 @@
-#ifndef UI_ELEMENT_H
-#define UI_ELEMENT_H
+#pragma once
+
+#ifdef _WIN32
+    #include <SDL.h>
+#elif defined(__unix__) || defined(__linux__)
+    #include <SDL2/SDL.h>
+#endif
 
 #include "../ui_constraint/ui_constraint.h"
 #include "../../utils/vector/vector.h"
 #include "../../colors/colors.h"
 #include "../../texture/texture.h"
 
-#include <SDL2/SDL.h>
 #include <stdbool.h>
 
 #define UITEXT_MAX_LENGTH 50
@@ -16,8 +20,8 @@ typedef struct UIElement
 {
 	UIElement* parent;
 	UIConstraints constraints;
-	Vector2 position;
-	Vector2 size;
+	SDL_Point position;
+	SDL_Point size;
 
 	void (*update)(UIElement* self);
 	void (*recalculate)(UIElement* sibling, UIElement* self);
@@ -57,7 +61,7 @@ typedef struct UIButton
 	UIElement base;
 
 	char text[UITEXT_MAX_LENGTH + 1];
-	Vector2 text_position;
+	SDL_Point text_position;
 	Color color;
 	Color text_color;
 	Uint32 corner_radius;
@@ -245,5 +249,3 @@ void _ui_splitbuttonitem_on_click(_UISplitButtonItem* self);
 void __ui_element_recalculate(UIElement* sibling, UIElement* element);
 int __ui_calculate_size(UIConstraint* constraint, int parent_size);
 int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef COLORS_H
-#define COLORS_H
+#pragma once
 
 #ifdef _WIN32
     #include <SDL.h>
@@ -7,7 +6,7 @@
     #include <SDL2/SDL.h>
 #endif
 
-#include "../defines.h"
+typedef SDL_Color Color;
 
 #define WHITE (Color) { 255, 255, 255, 255 }
 #define BLACK (Color) { 0, 0, 0, 255 }
@@ -28,5 +27,3 @@ Color color_from_hsv(double h, double s, double v);
 Color color_from_grayscale(int value);
 Color color_fade(Color color, double fade);
 Color color_shift(Color color, int shift);
-
-#endif

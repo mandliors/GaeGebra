@@ -1,5 +1,4 @@
-#ifndef UI_CONSTRAINT_H
-#define UI_CONSTRAINT_H
+#pragma once
 
 typedef enum ConstraintType
 {
@@ -29,5 +28,3 @@ UIConstraint new_relative_constraint(double value);
 UIConstraint new_offset_constraint(double value);
 UIConstraint new_aspect_constraint(double value);
 UIConstraints constraints_from_string(const char* string);
-
-#endif

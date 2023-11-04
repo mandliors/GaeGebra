@@ -5,7 +5,7 @@ void _ui_init(UIData* ui_data, int width, int height)
 {
     UIConstraints constraints;
     ui_data->main_container = ui_create_container(NULL, constraints);
-    ui_data->main_container->base.size = (Vector2){width, height};
+    ui_data->main_container->base.size = (SDL_Point){width, height};
     ui_data->text_input[0] = '\0';
     ui_data->backspace_pressed = false;
     SDL_StopTextInput(); //has to be called, because text input seems to be on by default (no idea why)

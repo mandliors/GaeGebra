@@ -14,8 +14,8 @@ UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_container_update;
     element->recalculate = _ui_container_recalculate;
     element->render = _ui_container_render;
@@ -40,8 +40,8 @@ UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color c
 
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_panel_update;
     element->recalculate = _ui_panel_recalculate;
     element->render = _ui_panel_render;
@@ -69,8 +69,8 @@ UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const c
 
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_label_update;
     element->recalculate = _ui_label_recalculate;
     element->render = _ui_label_render;
@@ -96,15 +96,15 @@ UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_button_update;
     element->recalculate = _ui_button_recalculate;
     element->render = _ui_button_render;
     element->destroy = _ui_button_destroy;
 
     strcpy(button->text, text);
-    button->text_position = (Vector2){0, 0};
+    button->text_position = (SDL_Point){0, 0};
     button->color = color;
     button->text_color = text_color;
     button->corner_radius = 2;
@@ -128,8 +128,8 @@ UIImageButton* ui_create_imagebutton(UIContainer* parent, UIConstraints constrai
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_imagebutton_update;
     element->recalculate = _ui_imagebutton_recalculate;
     element->render = _ui_imagebutton_render;
@@ -156,8 +156,8 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_textbox_update;
     element->recalculate = _ui_textbox_recalculate;
     element->render = _ui_textbox_render;
@@ -188,8 +188,8 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_checkbox_update;
     element->recalculate = _ui_checkbox_recalculate;
     element->render = _ui_checkbox_render;
@@ -219,8 +219,8 @@ UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, doubl
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_slider_update;
     element->recalculate = _ui_slider_recalculate;
     element->render = _ui_slider_render;
@@ -251,8 +251,8 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     
     element->parent = (UIElement*)parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_dropdown_update;
     element->recalculate = _ui_dropdown_recalculate;
     element->render = _ui_dropdown_render;
@@ -300,8 +300,8 @@ UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constrai
     UIElement* element = (UIElement*)splitbutton;
     
     element->parent = (UIElement*)parent;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_splitbutton_update;
     element->recalculate = _ui_splitbutton_recalculate;
     element->render = _ui_splitbutton_render;
@@ -456,7 +456,7 @@ void _ui_panel_destroy(UIElement* self)
 
 void _ui_label_update(UIElement* self)
 {
-    Vector2 size = renderer_query_text_size(((UILabel*)self)->text);
+    SDL_Point size = renderer_query_text_size(((UILabel*)self)->text);
     if (!app_get_active_window()->ui_data.mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, size.x, size.y))
         app_get_active_window()->ui_data.mouse_captured = true;
@@ -522,8 +522,8 @@ void _ui_button_recalculate(UIElement* sibling, UIElement* self)
     __ui_element_recalculate(sibling, self);
     
     UIButton* button = (UIButton*)self;
-    Vector2 text_size = renderer_query_text_size(button->text);
-    button->text_position = (Vector2){self->position.x + (self->size.x - text_size.x) / 2,
+    SDL_Point text_size = renderer_query_text_size(button->text);
+    button->text_position = (SDL_Point){self->position.x + (self->size.x - text_size.x) / 2,
                                       self->position.y + (self->size.y - text_size.y) / 2};
 }
 void _ui_button_render(UIElement* self)
@@ -680,7 +680,7 @@ void _ui_textbox_recalculate(UIElement* sibling, UIElement* self)
 void _ui_textbox_render(UIElement* self)
 {
     UITextbox* textbox = (UITextbox*)self;
-    Vector2 text_size = renderer_query_text_size(textbox->text);
+    SDL_Point text_size = renderer_query_text_size(textbox->text);
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->mouse_state == MS_PRESS ? color_shift(textbox->color, 15) : (textbox->mouse_state == MS_HOVER ? color_shift(textbox->color, 10) : textbox->color));
     renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->color);
     if (textbox->text[0] != '\0') renderer_draw_text(textbox->text, self->position.x + 6, self->position.y + (int)round((self->size.y - text_size.y) * 0.5), textbox->text_color);
@@ -731,9 +731,9 @@ void _ui_checkbox_render(UIElement* self)
             renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 10));
         else if (checkbox->mouse_state == MS_PRESS)
             renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_shift(checkbox->checked_color, 15));
-        Vector2 p1 = (Vector2){self->position.x + (int)round(self->size.x * 0.25), (int)round(self->position.y + self->size.y * 0.5)};
-        Vector2 p2 = (Vector2){self->position.x + (int)round(self->size.x * 0.45), (int)round(self->position.y + self->size.y * 0.75)};
-        Vector2 p3 = (Vector2){self->position.x + (int)round(self->size.x * 0.8), (int)round(self->position.y + self->size.y * 0.25)};
+        SDL_Point p1 = (SDL_Point){self->position.x + (int)round(self->size.x * 0.25), (int)round(self->position.y + self->size.y * 0.5)};
+        SDL_Point p2 = (SDL_Point){self->position.x + (int)round(self->size.x * 0.45), (int)round(self->position.y + self->size.y * 0.75)};
+        SDL_Point p3 = (SDL_Point){self->position.x + (int)round(self->size.x * 0.8), (int)round(self->position.y + self->size.y * 0.25)};
         renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 2, checkbox->unchecked_color);
         renderer_draw_line(p2.x, p2.y, p3.x, p3.y, 2, checkbox->unchecked_color);
     }
@@ -843,7 +843,7 @@ void _ui_dropdown_render(UIElement* self)
         }
     }
     double arrow_size = 0.35;
-    Vector2 arrow_pos = (Vector2){self->position.x + self->size.x - (int)round(self->size.y * arrow_size) - 10,
+    SDL_Point arrow_pos = (SDL_Point){self->position.x + self->size.x - (int)round(self->size.y * arrow_size) - 10,
                                   self->position.y + (int)round(self->size.y * (1 - arrow_size) * 0.5)};
     renderer_draw_filled_triangle(arrow_pos.x, arrow_pos.y, arrow_pos.x + (int)round(self->size.y * arrow_size),
                                   arrow_pos.y, arrow_pos.x + (int)round(self->size.y * arrow_size * 0.5),
@@ -868,8 +868,8 @@ _UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints c
     
     element->parent = parent->base.parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_dropdownitem_update;
     element->recalculate = _ui_dropdownitem_recalculate;
     element->render = _ui_dropdownitem_render;
@@ -1006,8 +1006,8 @@ _UISplitButtonItem* _ui_splitbuttonitem_create(UISplitButton* parent, UIConstrai
     
     element->parent = parent->base.parent;
     element->constraints = constraints;
-    element->position = (Vector2){0, 0};
-    element->size = (Vector2){0, 0};
+    element->position = (SDL_Point){0, 0};
+    element->size = (SDL_Point){0, 0};
     element->update = _ui_splitbuttonitem_update;
     element->recalculate = _ui_splitbuttonitem_recalculate;
     element->render = _ui_splitbuttonitem_render;

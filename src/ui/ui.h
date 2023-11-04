@@ -1,5 +1,4 @@
-#ifndef UI_H
-#define UI_H
+#pragma once
 
 #include "ui_element/ui_element.h"
 
@@ -17,5 +16,3 @@ void _ui_handle_event(UIData* ui_data, SDL_Event* event);
 void _ui_update(UIData* ui_data);
 void _ui_render(UIData* ui_data);
 void _ui_close(UIData* ui_data);
-
-#endif

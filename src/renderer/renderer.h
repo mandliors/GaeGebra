@@ -1,9 +1,8 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#pragma once
 
 #ifdef _WIN32
     #include <SDL.h>
-    #include <SDL2_gfxPrimitives>
+    #include <SDL2_gfxPrimitives.h>
 #elif defined(__unix__) || defined(__linux__)
     #include <SDL2/SDL.h>
     #include <SDL2/SDL2_gfxPrimitives.h>
@@ -13,7 +12,6 @@
 #include "../colors/colors.h"
 #include "../font/font.h"
 #include "../texture/texture.h"
-#include "../defines.h"
 
 void renderer_set_target(Window* window);
 void renderer_set_default_font(Font* font);
@@ -39,6 +37,4 @@ void renderer_draw_filled_pie(int x, int y, int radius, int start, int end, Colo
 void renderer_draw_bezier(const short* vx, const short* vy, int n, int s, Color color);
 void renderer_draw_texture(Texture* texture, int x, int y, int width, int height);
 void renderer_draw_text(const char* text, int x, int y, Color color);
-Vector2 renderer_query_text_size(const char* text);
-
-#endif
+SDL_Point renderer_query_text_size(const char* text);

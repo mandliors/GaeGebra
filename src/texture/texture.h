@@ -1,5 +1,4 @@
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#pragma once
 
 #ifdef _WIN32
     #include <SDL.h>
@@ -21,5 +20,3 @@ Texture* texture_load(SDL_Renderer* renderer, const char* path);
 //internal functions
 void _texture_init();
 void _texture_close();
-
-#endif

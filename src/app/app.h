@@ -1,5 +1,4 @@
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#pragma once
 
 #ifdef _WIN32
     #include <SDL.h>
@@ -37,5 +36,3 @@ double app_get_delta_time();
 //internal functions
 void _app_add_window(Window* window);
 void _app_set_active_window(Window* window);
-
-#endif

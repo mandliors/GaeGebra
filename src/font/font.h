@@ -1,5 +1,4 @@
-#ifndef FONT_H
-#define FONT_H
+#pragma once
 
 #ifdef _WIN32
     #include <SDL_ttf.h>
@@ -18,5 +17,3 @@ Font* font_load(const char* path, int size);
 //internal functions
 void _font_init();
 void _font_close();
-
-#endif
