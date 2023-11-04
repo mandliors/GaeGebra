@@ -1,6 +1,6 @@
 #!/bin/bash
 
-executable_name="coordinate_geometry"
+executable_name="GaeGebra"
 
 clear
 cd build
