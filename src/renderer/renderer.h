@@ -15,6 +15,8 @@
 
 void renderer_set_target(Window* window);
 void renderer_set_default_font(Font* font);
+void renderer_set_clip_rect(int x, int y, int width, int height);
+void renderer_reset_clip_rect();
 void renderer_clear(Color color);
 
 void renderer_draw_pixel(int x, int y, Color color);

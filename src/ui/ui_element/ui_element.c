@@ -684,11 +684,26 @@ void _ui_textbox_recalculate(UIElement* sibling, UIElement* self)
 void _ui_textbox_render(UIElement* self)
 {
     UITextbox* textbox = (UITextbox*)self;
-    SDL_Point text_size = renderer_query_text_size(textbox->text);
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->mouse_state == MS_PRESS ? __clever_color_shift(textbox->color, 15) : (textbox->mouse_state == MS_HOVER ? __clever_color_shift(textbox->color, 10) : textbox->color));
-    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->color);
-    if (textbox->text[0] != '\0') renderer_draw_text(textbox->text, self->position.x + 6, self->position.y + (int)round((self->size.y - text_size.y) * 0.5), textbox->text_color);
-    if (textbox->focused) renderer_draw_line(self->position.x + text_size.x + 6, self->position.y + 2, self->position.x + text_size.x + 6, self->position.y + self->size.y - 4, 2, textbox->text_color);
+    renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->text_color);
+    
+    SDL_Point text_size = renderer_query_text_size(textbox->text);
+    int cursor_offset = (int)round(self->size.y - text_size.y) * 0.5;
+    if (text_size.x > self->size.x - 12)
+    {
+        renderer_set_clip_rect(self->position.x + 6, self->position.y, self->size.x - 12, self->size.y);
+        renderer_draw_text(textbox->text, self->position.x + 6 - (text_size.x - self->size.x + 12), self->position.y + (int)round((self->size.y - text_size.y) * 0.5), textbox->text_color);
+        renderer_reset_clip_rect();
+        if (textbox->focused)
+            renderer_draw_line(self->position.x + self->size.x - 6, self->position.y + cursor_offset, self->position.x + self->size.x - 6, self->position.y + self->size.y - cursor_offset, 2, textbox->text_color);
+    }
+    else
+    {
+        if (textbox->text[0] != '\0')
+            renderer_draw_text(textbox->text, self->position.x + 6, self->position.y + (int)round((self->size.y - text_size.y) * 0.5), textbox->text_color);
+        if (textbox->focused)
+            renderer_draw_line(self->position.x + text_size.x + 6, self->position.y + cursor_offset, self->position.x + text_size.x + 6, self->position.y + self->size.y - cursor_offset, 2, textbox->text_color);
+    }
 }
 void _ui_textbox_destroy(UIElement* self)
 {
@@ -962,7 +977,11 @@ void _ui_splitbutton_update(UIElement* self)
     if (input_is_mouse_button_released(SDL_BUTTON_LEFT) &&
         !check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
         self->position.x, self->position.y, self->size.x, self->size.y))
+    {
         splitbutton->expanded = false;
+        if (app_get_active_window()->ui_data.expanded_splitbutton == splitbutton)
+            app_get_active_window()->ui_data.expanded_splitbutton = NULL;
+    }
 }
 void _ui_splitbutton_recalculate(UIElement* sibling, UIElement* self)
 {

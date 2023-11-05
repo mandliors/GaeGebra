@@ -12,6 +12,15 @@ void renderer_set_default_font(Font* font)
 {
 	default_font = font;
 }
+void renderer_set_clip_rect(int x, int y, int width, int height)
+{
+	SDL_Rect rect = { x, y, width, height };
+	SDL_RenderSetClipRect(renderer, &rect);
+}
+void renderer_reset_clip_rect()
+{
+	SDL_RenderSetClipRect(renderer, NULL);
+}
 void renderer_clear(Color color)
 {
 	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
