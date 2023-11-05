@@ -12,7 +12,7 @@ add_executable(GaeGebra)
 target_sources(GaeGebra PRIVATE
     src/main.c
     src/app/app.c
-    src/colors/colors.c
+    src/color/color.c
     src/font/font.c
     src/input/input.c
     src/renderer/renderer.c

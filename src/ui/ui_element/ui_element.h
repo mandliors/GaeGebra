@@ -8,7 +8,7 @@
 
 #include "../ui_constraint/ui_constraint.h"
 #include "../../utils/vector/vector.h"
-#include "../../colors/colors.h"
+#include "../../color/color.h"
 #include "../../texture/texture.h"
 
 #include <stdbool.h>
@@ -187,67 +187,3 @@ void _ui_container_update(UIElement* self);
 void _ui_container_recalculate(UIElement* sibling, UIElement* self);
 void _ui_container_render(UIElement* self);
 void _ui_container_destroy(UIElement* self);
-
-void _ui_panel_update(UIElement* self);
-void _ui_panel_recalculate(UIElement* sibling, UIElement* self);
-void _ui_panel_render(UIElement* self);
-void _ui_panel_destroy(UIElement* self);
-
-void _ui_label_update(UIElement* self);
-void _ui_label_recalculate(UIElement* sibling, UIElement* self);
-void _ui_label_render(UIElement* self);
-void _ui_label_destroy(UIElement* self);
-
-void _ui_button_update(UIElement* self);
-void _ui_button_recalculate(UIElement* sibling, UIElement* self);
-void _ui_button_render(UIElement* self);
-void _ui_button_destroy(UIElement* self);
-
-void _ui_imagebutton_update(UIElement* self);
-void _ui_imagebutton_recalculate(UIElement* sibling, UIElement* self);
-void _ui_imagebutton_render(UIElement* self);
-void _ui_imagebutton_destroy(UIElement* self);
-
-void _ui_textbox_update(UIElement* self);
-void _ui_textbox_recalculate(UIElement* sibling, UIElement* self);
-void _ui_textbox_render(UIElement* self);
-void _ui_textbox_destroy(UIElement* self);
-
-void _ui_checkbox_update(UIElement* self);
-void _ui_checkbox_recalculate(UIElement* sibling, UIElement* self);
-void _ui_checkbox_render(UIElement* self);
-void _ui_checkbox_destroy(UIElement* self);
-
-void _ui_slider_update(UIElement* self);
-void _ui_slider_recalculate(UIElement* sibling, UIElement* self);
-void _ui_slider_render(UIElement* self);
-void _ui_slider_destroy(UIElement* self);
-
-void _ui_dropdown_update(UIElement* self);
-void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self);
-void _ui_dropdown_render(UIElement* self);
-void _ui_dropdown_destroy(UIElement* self);
-
-_UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstraints constraints, Sint32 index, const char* text);
-void _ui_dropdownitem_update(UIElement* self);
-void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self);
-void _ui_dropdownitem_render(UIElement* self);
-void _ui_dropdownitem_destroy(UIElement* self);
-void _ui_dropdownitem_on_click(_UIDropdownItem* self);
-
-void _ui_splitbutton_update(UIElement* self);
-void _ui_splitbutton_recalculate(UIElement* sibling, UIElement* self);
-void _ui_splitbutton_render(UIElement* self);
-void _ui_splitbutton_destroy(UIElement* self);
-
-_UISplitButtonItem* _ui_splitbuttonitem_create(UISplitButton* parent, UIConstraints constraints, Sint32 index, const char* text);
-void _ui_splitbuttonitem_update(UIElement* self);
-void _ui_splitbuttonitem_recalculate(UIElement* sibling, UIElement* self);
-void _ui_splitbuttonitem_render(UIElement* self);
-void _ui_splitbuttonitem_destroy(UIElement* self);
-void _ui_splitbuttonitem_on_click(_UISplitButtonItem* self);
-
-void __ui_element_recalculate(UIElement* sibling, UIElement* element);
-int __ui_calculate_size(UIConstraint* constraint, int parent_size);
-int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size);
-Color __clever_color_shift(Color color, int shift);

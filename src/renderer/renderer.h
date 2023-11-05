@@ -9,7 +9,7 @@
 #endif
 
 #include "../window/window.h"
-#include "../colors/colors.h"
+#include "../color/color.h"
 #include "../font/font.h"
 #include "../texture/texture.h"
 

@@ -1,4 +1,4 @@
-#include "colors.h"
+#include "color.h"
 
 Color color_from_hex(int hex)
 {
