@@ -1,53 +1,56 @@
-#include "includes.h"
+/**
+ * @file main.c
+ * @author Örs Mándli (mandliors@gmail.com)
+ * @brief This is the entry point of the application.
+ * @version 0.1
+ * @date 2023-11-05
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
-#include <stdio.h>
+#include "includes.h"
 
 #define FPS 60
 
-void clicked(UIButton* self)
-{
-    app_request_close();
-}
+void on_filemenu_clicked(UISplitButton* self, Sint32 index);
+void on_editmenu_clicked(UISplitButton* self, Sint32 index);
 
 int main(void)
 {
     app_init();
     app_set_target_fps(FPS);
 
-    Window* main_window = window_create("Test", 800, 600, SDL_WINDOW_RESIZABLE);
+    Window* window = window_create("GaeGebra", 800, 600, SDL_WINDOW_RESIZABLE);
+    SDL_MaximizeWindow(window->window);
 
     Font* font = font_load("../assets/LiberationSerif.ttf", 20);
     renderer_set_default_font(font);
 
-    UIContainer* left_container = ui_create_container(window_get_main_container(main_window), constraints_from_string("10p 40p 60p -50p"));
-    ui_create_panel(left_container, constraints_from_string("0r 0r 1r 1r"), GRAY, DARK_GRAY, 2, 2);
-    ui_create_button(left_container, constraints_from_string("c 8p 0.7r 1.0a"), "X", (Color){40, 40, 40, 255}, GRAY, clicked);
-    ui_create_button(left_container, constraints_from_string("c 10o 0.7r 1.0a"), "_", (Color){40, 40, 40, 255}, GRAY, clicked);
-    ui_create_button(left_container, constraints_from_string("c 10o 0.7r 1.0a"), "O", (Color){40, 40, 40, 255}, GRAY, clicked);
-    ui_create_checkbox(left_container, constraints_from_string("c c 0.7r 1.0a"), (Color){40, 40, 40, 255}, GRAY, NULL);
-
-    UIContainer* top_container = ui_create_container(window_get_main_container(main_window), constraints_from_string("80p 40p -90p 60p"));
-    ui_create_panel(top_container, constraints_from_string("0r 0r 1r 1r"), GRAY, DARK_GRAY, 2, 2);
-    ui_create_label(top_container, constraints_from_string("c c 0p 0p"), "Coordinate Geometry", DARK_GRAY);
-    ui_create_slider(top_container, constraints_from_string("0.68r 10p 0.3r 30p"), 0.5, DARK_GRAY, color_shift(DARK_GRAY, 40), NULL);
-    ui_create_textbox(top_container, constraints_from_string("10p 10p 0.3r 30p"), "bing chilling", DARK_GRAY, GRAY, NULL);
-
-    UIContainer* main_container = ui_create_container(window_get_main_container(main_window), constraints_from_string("80p 110p -90p -120p"));
-    ui_create_panel(main_container, constraints_from_string("0r 0r 1r 1r"), GRAY, DARK_GRAY, 2, 2);
-    ui_create_dropdown(main_container, constraints_from_string("c c 0.3r 30p"), "Item 1;Item 2;Item 3;Item 4", DARK_GRAY, GRAY, NULL);
+    UIContainer* menubar = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 30p"));
+    ui_create_panel(menubar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), WHITE, 0, 0);
+    ui_create_splitbutton(menubar, constraints_from_string("0p 0p 1r 1r"), "File;Close", color_from_grayscale(180), BLACK, on_filemenu_clicked, true);
+    ui_create_splitbutton(menubar, constraints_from_string("0o 0p 1r 1r"), "Edit;Close", color_from_grayscale(180), BLACK, on_editmenu_clicked, true);
     
-    UIContainer* menu_container = ui_create_container(window_get_main_container(main_window), constraints_from_string("0p 0p 1r 30p"));
-    ui_create_splitbutton(menu_container, constraints_from_string("0p 0p 0p 30p"), "File;New;Open;Save;Close", DARK_GRAY, GRAY, NULL);
-    ui_create_splitbutton(menu_container, constraints_from_string("0o 0p 0p 30p"), "Edit;Copy;Paste;Cut", DARK_GRAY, GRAY, NULL);
-
-    while (!main_window->close_requested)
+    while (!window->close_requested)
     {
         app_update();
-        renderer_set_target(main_window);
-        renderer_clear(GRAY);
+        renderer_set_target(window);
+        renderer_clear(WHITE);
         app_render();
     }
 
     app_close();
     return 0;
+}
+
+void on_filemenu_clicked(UISplitButton* self, Sint32 index)
+{
+    if (index == 0)
+        app_request_close();
+}
+void on_editmenu_clicked(UISplitButton* self, Sint32 index)
+{
+    if (index == 0)
+        app_request_close();
 }

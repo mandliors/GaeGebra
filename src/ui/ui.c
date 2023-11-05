@@ -8,6 +8,8 @@ void _ui_init(UIData* ui_data, int width, int height)
     ui_data->main_container->base.size = (SDL_Point){width, height};
     ui_data->text_input[0] = '\0';
     ui_data->backspace_pressed = false;
+    ui_data->mouse_captured = false;
+    ui_data->expanded_splitbutton = NULL;
     SDL_StopTextInput(); //has to be called, because text input seems to be on by default (no idea why)
 }
 void _ui_handle_event(UIData* ui_data, SDL_Event* event)

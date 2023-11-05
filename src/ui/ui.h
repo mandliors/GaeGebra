@@ -8,6 +8,7 @@ typedef struct UIData
 	char text_input[SDL_TEXTINPUTEVENT_TEXT_SIZE];
 	bool backspace_pressed;
 	bool mouse_captured;
+	UISplitButton* expanded_splitbutton;
 } UIData;
 
 //internal functions

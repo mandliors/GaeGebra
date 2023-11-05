@@ -88,9 +88,9 @@ Color color_shift(Color color, int shift)
 {
     return (Color)
     {
-        (color.r + shift) % 256,
-        (color.g + shift) % 256,
-        (color.b + shift) % 256,
+        (color.r + shift + 256) % 256,
+        (color.g + shift + 256) % 256,
+        (color.b + shift + 256) % 256,
         color.a
     };
 }

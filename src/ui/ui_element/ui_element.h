@@ -167,6 +167,7 @@ typedef struct UISplitButton
 	Color text_color;
 	Uint32 corner_radius;
 	void (*on_item_clicked)(UISplitButton* self, Sint32 index);
+	bool auto_dropdown;
 } UISplitButton;
 
 //API functions
@@ -179,7 +180,7 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
 UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, Color checked_color, Color unchecked_color, void (*on_checked_changed)(UICheckbox* self, bool checked));
 UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color, void (*on_value_changed)(UISlider* self, double value));
 UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_selection_changed)(UIDropdownList* self, Sint32 index));
-UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_item_clicked)(UISplitButton* self, Sint32 index));
+UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_item_clicked)(UISplitButton* self, Sint32 index), bool auto_dropdown);
 
 //internal functions
 void _ui_container_update(UIElement* self);
@@ -249,3 +250,4 @@ void _ui_splitbuttonitem_on_click(_UISplitButtonItem* self);
 void __ui_element_recalculate(UIElement* sibling, UIElement* element);
 int __ui_calculate_size(UIConstraint* constraint, int parent_size);
 int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size);
+Color __clever_color_shift(Color color, int shift);
