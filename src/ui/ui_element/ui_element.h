@@ -121,17 +121,6 @@ typedef struct UISlider
 } UISlider;
 
 typedef struct UIDropdownList UIDropdownList;
-typedef struct _UIDropdownItem _UIDropdownItem;
-typedef struct _UIDropdownItem
-{
-	UIElement base;
-
-	UIDropdownList* parent_dropdown;
-	Sint32 dropdown_index;
-	char text[UITEXT_MAX_LENGTH + 1];
-	MouseState mouse_state;
-} _UIDropdownItem;
-
 typedef struct UIDropdownList
 {
 	UIElement base;
@@ -146,17 +135,6 @@ typedef struct UIDropdownList
 } UIDropdownList;
 
 typedef struct UISplitButton UISplitButton;
-typedef struct _UISplitButtonItem _UISplitButtonItem;
-typedef struct _UISplitButtonItem
-{
-	UIElement base;
-
-	UISplitButton* parent_splitbutton;
-	Sint32 splitbutton_index;
-	char text[UITEXT_MAX_LENGTH + 1];
-	MouseState mouse_state;
-} _UISplitButtonItem;
-
 typedef struct UISplitButton
 {
 	UIElement base;

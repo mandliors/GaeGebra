@@ -7,6 +7,28 @@
 #include <math.h>
 #include <string.h>
 
+typedef struct _UIDropdownItem _UIDropdownItem;
+typedef struct _UIDropdownItem
+{
+	UIElement base;
+
+	UIDropdownList* parent_dropdown;
+	Sint32 dropdown_index;
+	char text[UITEXT_MAX_LENGTH + 1];
+	MouseState mouse_state;
+} _UIDropdownItem;
+
+typedef struct _UISplitButtonItem _UISplitButtonItem;
+typedef struct _UISplitButtonItem
+{
+	UIElement base;
+
+	UISplitButton* parent_splitbutton;
+	Sint32 splitbutton_index;
+	char text[UITEXT_MAX_LENGTH + 1];
+	MouseState mouse_state;
+} _UISplitButtonItem;
+
 static void _ui_panel_update(UIElement* self);
 static void _ui_panel_recalculate(UIElement* sibling, UIElement* self);
 static void _ui_panel_render(UIElement* self);
