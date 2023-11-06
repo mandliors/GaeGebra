@@ -17,3 +17,5 @@ void _ui_handle_event(UIData* ui_data, SDL_Event* event);
 void _ui_update(UIData* ui_data);
 void _ui_render(UIData* ui_data);
 void _ui_close(UIData* ui_data);
+void _ui_set_target(UIData* ui_data);
+UIData* _ui_get_target();

@@ -1,4 +1,5 @@
 #include "vector.h"
+#include <stdio.h>
 
 Vector* vector_create(size_t capacity)
 {
@@ -38,7 +39,7 @@ void vector_free(Vector* vector)
 void* vector_get(Vector* vector, size_t idx)
 {
 	if (vector == NULL || idx >= vector->size)
-		return;
+		return NULL;
 	return vector->data[idx];
 }
 void vector_push_back(Vector* vector, void* value)

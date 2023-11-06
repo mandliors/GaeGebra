@@ -7,6 +7,8 @@
 #include "app.h"
 #include "../window/window.h"
 #include "../renderer/renderer.h"
+#include "../input/input.h"
+#include "../ui/ui.h"
 
 AppData app_data;
 
@@ -23,7 +25,6 @@ void app_init()
         exit(1);
     }
     app_data.windows = vector_create(0);
-    app_data.active_window = NULL;
     app_data.target_frame_time = 1000 / 60;
     app_data.last_frame_start = SDL_GetTicks();
     app_data.frame_start = SDL_GetTicks();
@@ -82,7 +83,6 @@ void app_close()
         _window_close(window);
         free(window);
     }
-    app_data.active_window = NULL;
     vector_free(app_data.windows);
     TTF_Quit();
     SDL_Quit();
@@ -92,9 +92,11 @@ void app_set_target_fps(Uint32 fps)
     app_data.target_frame_time = 1000 / fps;
 }
 
-Window* app_get_active_window()
+void app_set_target(Window* window)
 {
-    return app_data.active_window;
+    _renderer_set_target(window->renderer);
+    _input_set_target(&window->input_data);
+    _ui_set_target(&window->ui_data);
 }
 Vector* app_get_windows()
 {
@@ -112,10 +114,5 @@ double app_get_delta_time()
 void _app_add_window(Window* window)
 {
     vector_push_back(app_data.windows, (void*)window);
-    _app_set_active_window(window);
-    renderer_set_target(window->renderer);
-}
-void _app_set_active_window(Window* window)
-{
-	app_data.active_window = window;
+    app_set_target(window);
 }

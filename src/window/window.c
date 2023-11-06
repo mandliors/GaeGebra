@@ -49,7 +49,6 @@ void window_hide(Window* window)
 }
 void window_focus(Window* window)
 {
-    _app_set_active_window(window);
     SDL_RaiseWindow(window->window);
 }
 UIContainer* window_get_main_container(Window* window)
@@ -72,19 +71,20 @@ void _window_handle_event(Window* window, SDL_Event* event)
             window->close_requested = true;
         }
         else if (event->window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-            _app_set_active_window(window);
+            app_set_target(window);
     }
     _input_handle_event(&window->input_data, event);
     _ui_handle_event(&window->ui_data, event);
 }
 void _window_update(Window* window)
 {
-    input_set_target(window);
+    _input_set_target(&window->input_data);
     _ui_update(&window->ui_data);
 }
 void _window_render(Window* window)
 {
-    renderer_set_target(window);
+    _renderer_set_target(window->renderer);
+    _ui_set_target(&window->ui_data);
     _ui_render(&window->ui_data);
     SDL_RenderPresent(window->renderer);
 }

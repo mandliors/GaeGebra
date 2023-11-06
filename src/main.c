@@ -6,7 +6,6 @@
  * @date 2023-11-05
  * 
  * @copyright Copyright (c) 2023
- * 
  */
 
 #include "includes.h"
@@ -38,7 +37,7 @@ int main(void)
     while (!window->close_requested)
     {
         app_update();
-        renderer_set_target(window);
+        app_set_target(window);
         renderer_clear(WHITE);
         app_render();
     }
@@ -49,11 +48,13 @@ int main(void)
 
 void on_filemenu_clicked(UISplitButton* self, Sint32 index)
 {
+    printf("File menu clicked: %d%p\n", index, (void*)self);
     if (index == 0)
         app_request_close();
 }
 void on_editmenu_clicked(UISplitButton* self, Sint32 index)
 {
+    printf("File menu clicked: %d%p\n", index, (void*)self);
     if (index == 0)
         app_request_close();
 }

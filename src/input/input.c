@@ -1,47 +1,41 @@
 #include "input.h"
-#include "../window/window.h"
 #include "../app/app.h"
 
-InputData* input;
-
-void input_set_target(Window* window)
-{
-    input = &window->input_data;
-}
+InputData* target_input_data;
 
 bool input_is_mouse_button_down(int button)
 {
-    return input->current_mouse_button_state[button];
+    return target_input_data->current_mouse_button_state[button];
 }
 bool input_is_mouse_button_pressed(int button)
 {
-    return input->current_mouse_button_state[button] && !input->old_mouse_button_state[button];
+    return target_input_data->current_mouse_button_state[button] && !target_input_data->old_mouse_button_state[button];
 }
 bool input_is_mouse_button_released(int button)
 {
-    return !input->current_mouse_button_state[button] && input->old_mouse_button_state[button];
+    return !target_input_data->current_mouse_button_state[button] && target_input_data->old_mouse_button_state[button];
 }
 
 bool input_is_key_down(int key)
 {
-    return input->current_keyboard_state[key];
+    return target_input_data->current_keyboard_state[key];
 }
 bool input_is_key_pressed(int key)
 {
-    return input->current_keyboard_state[key] && !input->old_keyboard_state[key];
+    return target_input_data->current_keyboard_state[key] && !target_input_data->old_keyboard_state[key];
 }
 bool input_is_key_released(int key)
 {
-    return !input->current_keyboard_state[key] && input->old_keyboard_state[key];
+    return !target_input_data->current_keyboard_state[key] && target_input_data->old_keyboard_state[key];
 }
 
 SDL_Point input_get_mouse_position()
 {
-    return input->mouse_position;
+    return target_input_data->mouse_position;
 }
 int input_get_mouse_wheel_delta()
 {
-    return input->mouse_wheel_delta;
+    return target_input_data->mouse_wheel_delta;
 }
 
 void _input_init(InputData* input_data)
@@ -89,4 +83,9 @@ void _input_reset(InputData* input_data)
 void _input_close(InputData* input_data)
 {
     free(input_data->old_keyboard_state);
+}
+
+void _input_set_target(InputData* input_data)
+{
+    target_input_data = input_data;
 }

@@ -1,6 +1,8 @@
 #include "ui.h"
 #include "../app/app.h"
 
+UIData* target_ui_data = NULL;
+
 void _ui_init(UIData* ui_data, int width, int height)
 {
     UIConstraints constraints;
@@ -37,4 +39,12 @@ void _ui_render(UIData* ui_data)
 void _ui_close(UIData* ui_data)
 {
     _ui_container_destroy((UIElement*)ui_data->main_container);
+}
+void _ui_set_target(UIData* ui_data)
+{
+    target_ui_data = ui_data;
+}
+UIData* _ui_get_target()
+{
+    return target_ui_data;
 }

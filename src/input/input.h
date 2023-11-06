@@ -23,9 +23,6 @@ typedef struct InputData
 } InputData;
 
 //API functions
-typedef struct Window Window;
-void input_set_target(Window* window);
-
 bool input_is_mouse_button_down(int button);
 bool input_is_mouse_button_pressed(int button);
 bool input_is_mouse_button_released(int button);
@@ -42,3 +39,4 @@ void _input_init(InputData* input_data);
 void _input_handle_event(InputData* input_data, SDL_Event* event);
 void _input_reset(InputData* input_data);
 void _input_close(InputData* input_data);
+void _input_set_target(InputData* input_data);

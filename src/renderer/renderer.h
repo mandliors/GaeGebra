@@ -8,12 +8,10 @@
     #include <SDL2/SDL2_gfxPrimitives.h>
 #endif
 
-#include "../window/window.h"
 #include "../color/color.h"
 #include "../font/font.h"
 #include "../texture/texture.h"
 
-void renderer_set_target(Window* window);
 void renderer_set_default_font(Font* font);
 void renderer_set_clip_rect(int x, int y, int width, int height);
 void renderer_reset_clip_rect();
@@ -40,3 +38,5 @@ void renderer_draw_bezier(const short* vx, const short* vy, int n, int s, Color 
 void renderer_draw_texture(Texture* texture, int x, int y, int width, int height);
 void renderer_draw_text(const char* text, int x, int y, Color color);
 SDL_Point renderer_query_text_size(const char* text);
+
+void _renderer_set_target(SDL_Renderer* renderer);

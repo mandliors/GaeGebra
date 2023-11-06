@@ -25,7 +25,7 @@ target_sources(GaeGebra PRIVATE
     src/window/window.c
 )
 target_include_directories(GaeGebra PRIVATE src)
-target_compile_options(GaeGebra PRIVATE -Wall -Wextra -Wpedantic) #-Wconversion
+target_compile_options(GaeGebra PRIVATE -Wall -Werror -Wextra -Wpedantic) #-Wconversion
 target_link_libraries(GaeGebra PRIVATE
     SDL2::Main
     SDL2::Image
