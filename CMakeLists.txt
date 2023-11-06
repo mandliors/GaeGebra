@@ -14,6 +14,8 @@ target_sources(GaeGebra PRIVATE
     src/app/app.c
     src/color/color.c
     src/font/font.c
+    src/geometry/shape/shape.c
+    src/geometry/vector2/vector2.c
     src/input/input.c
     src/renderer/renderer.c
     src/texture/texture.c

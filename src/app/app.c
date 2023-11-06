@@ -38,13 +38,13 @@ void app_update()
     app_data.delta_time = (double)(app_data.frame_start - app_data.last_frame_start) / 1000.0;
     app_data.last_frame_start = app_data.frame_start;
 
-    for (size_t i = 0; i < app_data.windows->size; i++)
+    for (size_t i = 0; i < vector_size(app_data.windows); i++)
         _window_reset((Window*)vector_get(app_data.windows, i));
 
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0)
     {
-        for (size_t i = 0; i < app_data.windows->size; i++)
+        for (size_t i = 0; i < vector_size(app_data.windows); i++)
         {
             Window* window = (Window*)vector_get(app_data.windows, i);
             if (event.window.windowID == SDL_GetWindowID(window->window))
@@ -54,12 +54,12 @@ void app_update()
             }
         }
     }
-    for (size_t i = 0; i < app_data.windows->size; i++)
+    for (size_t i = 0; i < vector_size(app_data.windows); i++)
         _window_update((Window*)vector_get(app_data.windows, i));
 }
 void app_render()
 {
-    for (size_t i = 0; i < app_data.windows->size; i++)
+    for (size_t i = 0; i < vector_size(app_data.windows); i++)
     {
 		Window* window = (Window*)vector_get(app_data.windows, i);
         _window_render(window);
@@ -70,14 +70,14 @@ void app_render()
 }
 void app_request_close()
 {
-    for (size_t i = 0; i < app_data.windows->size; i++)
+    for (size_t i = 0; i < vector_size(app_data.windows); i++)
         ((Window*)vector_get(app_data.windows, i))->close_requested = true;
 }
 void app_close()
 {
     _font_close();
     _texture_close();
-    for (size_t i = 0; i < app_data.windows->size; i++)
+    for (size_t i = 0; i < vector_size(app_data.windows); i++)
     {
         Window* window = (Window*)vector_get(app_data.windows, i);
         _window_close(window);

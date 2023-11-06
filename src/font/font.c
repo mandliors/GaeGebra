@@ -28,7 +28,7 @@ void _font_init()
 }
 void _font_close()
 {
-	for (size_t i = 0; i < fonts->size; i++)
+	for (size_t i = 0; i < vector_size(fonts); i++)
 	{
 		Font* font = vector_get(fonts, i);
 		TTF_CloseFont(font->font);

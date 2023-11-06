@@ -94,3 +94,10 @@ Color color_shift(Color color, int shift)
         color.a
     };
 }
+Color color_clever_shift(Color color, int shift)
+{
+    if (color.r + color.g + color.b < 255 * 3)
+        return color_shift(color, shift);
+    else
+        return color_shift(color, -shift);
+}

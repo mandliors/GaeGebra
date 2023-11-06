@@ -24,7 +24,7 @@ void _texture_init()
 }
 void _texture_close()
 {
-	for (size_t i = 0; i < textures->size; i++)
+	for (size_t i = 0; i < vector_size(textures); i++)
 	{
 		Texture* texture = vector_get(textures, i);
 		SDL_DestroyTexture(texture->texture);

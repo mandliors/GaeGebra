@@ -27,3 +27,4 @@ Color color_from_hsv(double h, double s, double v);
 Color color_from_grayscale(int value);
 Color color_fade(Color color, double fade);
 Color color_shift(Color color, int shift);
+Color color_clever_shift(Color color, int shift);

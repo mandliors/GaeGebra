@@ -89,7 +89,6 @@ static void _ui_splitbuttonitem_on_click(_UISplitButtonItem* self);
 static void __ui_element_recalculate(UIElement* sibling, UIElement* element);
 static int __ui_calculate_size(UIConstraint* constraint, int parent_size);
 static int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size);
-static Color __clever_color_shift(Color color, int shift);
 
 UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
 {
@@ -490,7 +489,7 @@ void _ui_container_recalculate(UIElement* sibling, UIElement* self)
     {
         UIElement* child = (UIElement*)vector_get(container->children, 0);
         child->recalculate(NULL, child);
-        for (size_t i = 1; i < container->children->size; i++)
+        for (size_t i = 1; i < vector_size(container->children); i++)
         {
             UIElement* child = (UIElement*)vector_get(container->children, i);
             UIElement* sibling = (UIElement*)vector_get(container->children, i - 1);
@@ -501,7 +500,7 @@ void _ui_container_recalculate(UIElement* sibling, UIElement* self)
 void _ui_container_render(UIElement* self)
 {
     UIContainer* container = (UIContainer*)self;
-    for (size_t i = 0; i < container->children->size; i++)
+    for (size_t i = 0; i < vector_size(container->children); i++)
     {
         UIElement* child = (UIElement*)vector_get(container->children, i);
         child->render(child);
@@ -510,7 +509,7 @@ void _ui_container_render(UIElement* self)
 void _ui_container_destroy(UIElement* self)
 {
     UIContainer* container = (UIContainer*)self;
-    for (size_t i = 0; i < container->children->size; i++)
+    for (size_t i = 0; i < vector_size(container->children); i++)
     {
         UIElement* child = (UIElement*)vector_get(container->children, i);
         child->destroy(child);
@@ -617,7 +616,7 @@ static void _ui_button_recalculate(UIElement* sibling, UIElement* self)
 static void _ui_button_render(UIElement* self)
 {
     UIButton* button = (UIButton*)self;
-    Color color = __clever_color_shift(button->color, button->mouse_state == MS_PRESS ? 15 : (button->mouse_state == MS_HOVER ? 10 : 0));
+    Color color = color_clever_shift(button->color, button->mouse_state == MS_PRESS ? 15 : (button->mouse_state == MS_HOVER ? 10 : 0));
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, button->corner_radius, color);
     if (button->text[0] != '\0')
         renderer_draw_text(button->text, button->text_position.x, button->text_position.y, button->text_color);
@@ -768,7 +767,7 @@ static void _ui_textbox_recalculate(UIElement* sibling, UIElement* self)
 static void _ui_textbox_render(UIElement* self)
 {
     UITextbox* textbox = (UITextbox*)self;
-    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->mouse_state == MS_PRESS ? __clever_color_shift(textbox->color, 15) : (textbox->mouse_state == MS_HOVER ? __clever_color_shift(textbox->color, 10) : textbox->color));
+    renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->mouse_state == MS_PRESS ? color_clever_shift(textbox->color, 15) : (textbox->mouse_state == MS_HOVER ? color_clever_shift(textbox->color, 10) : textbox->color));
     renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->text_color);
     
     SDL_Point text_size = renderer_query_text_size(textbox->text);
@@ -831,9 +830,9 @@ static void _ui_checkbox_render(UIElement* self)
         if (checkbox->mouse_state == MS_NONE)
             renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
         else if (checkbox->mouse_state == MS_HOVER)
-            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, __clever_color_shift(checkbox->checked_color, 10));
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_clever_shift(checkbox->checked_color, 10));
         else if (checkbox->mouse_state == MS_PRESS)
-            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, __clever_color_shift(checkbox->checked_color, 15));
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_clever_shift(checkbox->checked_color, 15));
         SDL_Point p1 = (SDL_Point){self->position.x + (int)round(self->size.x * 0.25), (int)round(self->position.y + self->size.y * 0.5)};
         SDL_Point p2 = (SDL_Point){self->position.x + (int)round(self->size.x * 0.45), (int)round(self->position.y + self->size.y * 0.75)};
         SDL_Point p3 = (SDL_Point){self->position.x + (int)round(self->size.x * 0.8), (int)round(self->position.y + self->size.y * 0.25)};
@@ -845,9 +844,9 @@ static void _ui_checkbox_render(UIElement* self)
         if (checkbox->mouse_state == MS_NONE)
             renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, checkbox->checked_color);
         else if (checkbox->mouse_state == MS_HOVER)
-            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, __clever_color_shift(checkbox->checked_color, 10));
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_clever_shift(checkbox->checked_color, 10));
         else if (checkbox->mouse_state == MS_PRESS)
-            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, __clever_color_shift(checkbox->checked_color, 15));
+            renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, checkbox->corner_radius, color_clever_shift(checkbox->checked_color, 15));
         renderer_draw_filled_rounded_rect(self->position.x + 2, self->position.y + 2, self->size.x - 4, self->size.y - 4, checkbox->corner_radius, checkbox->unchecked_color);
     }
 }
@@ -891,7 +890,7 @@ static void _ui_slider_render(UIElement* self)
 {
     UISlider* slider = (UISlider*)self;
     int handle_thickness = (int)round(1.4 * slider->thickness);
-    Color color = __clever_color_shift(slider->color, slider->mouse_state == MS_PRESS ? 15 : (slider->mouse_state == MS_HOVER ? 10 : 0));
+    Color color = color_clever_shift(slider->color, slider->mouse_state == MS_PRESS ? 15 : (slider->mouse_state == MS_HOVER ? 10 : 0));
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y + (int)round((self->size.y - slider->thickness) * 0.5), self->size.x, slider->thickness, slider->corner_radius, color);
     renderer_draw_filled_rounded_rect(self->position.x + (int)round(slider->value * self->size.x) - (int)round(handle_thickness * 0.5), self->position.y, handle_thickness, self->size.y, slider->corner_radius, slider->slider_color);
 }
@@ -908,7 +907,7 @@ static void _ui_dropdown_update(UIElement* self)
     top_item->update(top_item);
     if (dropdown->expanded)
     {
-        for (size_t i = 1; i < dropdown->items->size; i++)
+        for (size_t i = 1; i < vector_size(dropdown->items); i++)
         {
             UIElement* item = (UIElement*)vector_get(dropdown->items, i);
             item->update(item);
@@ -926,7 +925,7 @@ static void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self)
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->recalculate(sibling, top_item);
     
-    for (size_t i = 1; i < dropdown->items->size; i++)
+    for (size_t i = 1; i < vector_size(dropdown->items); i++)
     {
         UIElement* item = (UIElement*)vector_get(dropdown->items, i);
         item->recalculate((UIElement*)vector_get(dropdown->items, i - 1), item);
@@ -939,7 +938,7 @@ static void _ui_dropdown_render(UIElement* self)
     top_item->render(top_item);
     if (dropdown->expanded)
     {
-        for (size_t i = 0; i < dropdown->items->size; i++)
+        for (size_t i = 0; i < vector_size(dropdown->items); i++)
         {
             UIElement* item = (UIElement*)vector_get(dropdown->items, i);
             item->render(item);
@@ -955,7 +954,7 @@ static void _ui_dropdown_render(UIElement* self)
 static void _ui_dropdown_destroy(UIElement* self)
 {
     UIDropdownList* dropdown = (UIDropdownList*)self;
-    for (size_t i = 0; i < dropdown->items->size; i++)
+    for (size_t i = 0; i < vector_size(dropdown->items); i++)
     {
         UIElement* item = (UIElement*)vector_get(dropdown->items, i);
         item->destroy(item);
@@ -1017,12 +1016,12 @@ static void _ui_dropdownitem_render(UIElement* self)
     _UIDropdownItem* item = (_UIDropdownItem*)self;
     int shift = item->dropdown_index == -1 ? 0 : 8;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius,
-                                      item->mouse_state == MS_PRESS ? __clever_color_shift(item->parent_dropdown->color, 15 + shift)
-                                      : (item->mouse_state == MS_HOVER ? __clever_color_shift(item->parent_dropdown->color, 10 + shift)
-                                      : __clever_color_shift(item->parent_dropdown->color, shift)));
+                                      item->mouse_state == MS_PRESS ? color_clever_shift(item->parent_dropdown->color, 15 + shift)
+                                      : (item->mouse_state == MS_HOVER ? color_clever_shift(item->parent_dropdown->color, 10 + shift)
+                                      : color_clever_shift(item->parent_dropdown->color, shift)));
     renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y,
-                               item->parent_dropdown->corner_radius, __clever_color_shift(item->parent_dropdown->color, shift));
-    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), __clever_color_shift(item->parent_dropdown->text_color, shift));
+                               item->parent_dropdown->corner_radius, color_clever_shift(item->parent_dropdown->color, shift));
+    if (item->text[0] != '\0') renderer_draw_text(item->text, self->position.x + 6, self->position.y + (int)round((self->size.y - renderer_query_text_size(item->text).y) * 0.5), color_clever_shift(item->parent_dropdown->text_color, shift));
 }
 static void _ui_dropdownitem_destroy(UIElement* self)
 {
@@ -1052,7 +1051,7 @@ static void _ui_splitbutton_update(UIElement* self)
     top_item->update(top_item);
     if (splitbutton->expanded)
     {
-        for (size_t i = 1; i < splitbutton->items->size; i++)
+        for (size_t i = 1; i < vector_size(splitbutton->items); i++)
         {
             UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
             item->update(item);
@@ -1074,7 +1073,7 @@ static void _ui_splitbutton_recalculate(UIElement* sibling, UIElement* self)
     UIElement* top_item = (UIElement*)vector_get(splitbutton->items, 0);
     top_item->recalculate(sibling, top_item);
     
-    for (size_t i = 1; i < splitbutton->items->size; i++)
+    for (size_t i = 1; i < vector_size(splitbutton->items); i++)
     {
         UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
         item->recalculate((UIElement*)vector_get(splitbutton->items, i - 1), item);
@@ -1087,7 +1086,7 @@ static void _ui_splitbutton_render(UIElement* self)
     top_item->render(top_item);
     if (splitbutton->expanded)
     {
-        for (size_t i = 0; i < splitbutton->items->size; i++)
+        for (size_t i = 0; i < vector_size(splitbutton->items); i++)
         {
             UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
             item->render(item);
@@ -1097,7 +1096,7 @@ static void _ui_splitbutton_render(UIElement* self)
 static void _ui_splitbutton_destroy(UIElement* self)
 {
     UISplitButton* splitbutton = (UISplitButton*)self;
-    for (size_t i = 0; i < splitbutton->items->size; i++)
+    for (size_t i = 0; i < vector_size(splitbutton->items); i++)
     {
         UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
         item->destroy(item);
@@ -1168,8 +1167,8 @@ static void _ui_splitbuttonitem_render(UIElement* self)
 {
     _UISplitButtonItem* item = (_UISplitButtonItem*)self;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_splitbutton->corner_radius,
-                                      item->mouse_state == MS_PRESS ? __clever_color_shift(item->parent_splitbutton->color, 15)
-                                      : (item->mouse_state == MS_HOVER ? __clever_color_shift(item->parent_splitbutton->color, 10)
+                                      item->mouse_state == MS_PRESS ? color_clever_shift(item->parent_splitbutton->color, 15)
+                                      : (item->mouse_state == MS_HOVER ? color_clever_shift(item->parent_splitbutton->color, 10)
                                       : item->parent_splitbutton->color));
     renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y,
                                item->parent_splitbutton->corner_radius, item->parent_splitbutton->color);
@@ -1265,11 +1264,4 @@ static int __ui_calculate_position(UIConstraint* constraint, int sibling_positio
         default: //CT_ASPECT
             return -1;
     }
-}
-static Color __clever_color_shift(Color color, int shift)
-{
-    if (color.r + color.g + color.b < 255 * 3)
-        return color_shift(color, shift);
-    else
-        return color_shift(color, -shift);
 }

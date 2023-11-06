@@ -3,6 +3,7 @@
 #include "app/app.h"
 #include "color/color.h"
 #include "font/font.h"
+#include "geometry/shape/shape.h"
 #include "input/input.h"
 #include "renderer/renderer.h"
 #include "texture/texture.h"

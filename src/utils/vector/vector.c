@@ -73,6 +73,12 @@ void vector_reserve(Vector* vector, size_t capacity)
 		vector->capacity = capacity;
 	}
 }
+size_t vector_size(Vector* vector)
+{
+	if (vector == NULL)
+		return 0;
+	return vector->size;
+}
 void vector_clear(Vector* vector)
 {
 	if (vector == NULL)
