@@ -12,6 +12,7 @@
 #include "utils/vector/vector.h"
 
 #define FPS 60
+#define MOUSE_WHEEL_SENSITIVITY 5
 
 void on_pointer_clicked(UIButton* self);
 void on_point_clicked(UIButton* self);
@@ -44,7 +45,7 @@ int main(void)
     Font* font = font_load("../assets/LiberationSerif.ttf", 20);
     renderer_set_default_font(font);
 
-    SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+    SDL_Cursor* hand_cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 
     UIContainer* toolbar = ui_create_container(window_get_main_container(window), constraints_from_string("0p 30p 1r 50p"), NULL);
     ui_create_panel(toolbar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(40), WHITE, 0, 0);
@@ -72,42 +73,33 @@ int main(void)
         //update
         app_update();
 
-        Vector2 p1 = vector2_from_point(input_get_mouse_position());
-        Vector2 p2 = screen_to_coordinates(cs, p1);
-        Vector2 p3 = coordinates_to_screen(cs, p2);
         switch (state)
         {
         case STATE_POINTER:
             if (coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position())) != NULL)
-                SDL_SetCursor(cursor);
-            else
+                SDL_SetCursor(hand_cursor);
+            else if (input_is_mouse_button_down(SDL_BUTTON_LEFT))
             {
-                if (input_is_mouse_button_down(SDL_BUTTON_LEFT))
-                    coordinate_system_translate(cs, vector2_from_point(input_get_mouse_motion()));
-                SDL_SetCursor(SDL_GetDefaultCursor());
+                coordinate_system_translate(cs, vector2_from_point(input_get_mouse_motion()));
+                SDL_SetCursor(hand_cursor);
             }
+            else
+                SDL_SetCursor(SDL_GetDefaultCursor());
             break;
 
         case STATE_POINT:
             if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
-            {
-                Point* point = point_create(vector2_from_point(input_get_mouse_position()));
-                coordinate_system_add_shape(cs, (Shape*)point);
-            }
+                coordinate_system_add_shape(cs, (Shape*)point_create(vector2_from_point(input_get_mouse_position())));
             break;
         
         case STATE_LINE:
             break;
 
         case STATE_CIRCLE:
-            if (input_is_key_released(SDL_SCANCODE_U))
-                coordinate_system_zoom(cs, 1.1);
-            if (input_is_key_released(SDL_SCANCODE_J))
-                coordinate_system_zoom(cs, 1.0 / 1.1);
-            printf("(%d, %d) -> (%d, %d) -> (%d, %d)\n", (int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y, (int)p3.x, (int)p3.y);
             break;
         }
-
+        coordinate_system_zoom(cs, 1.0 + input_get_mouse_wheel_delta() / 100.0 * MOUSE_WHEEL_SENSITIVITY);
+        
         //draw
         renderer_clear(WHITE);
         app_set_target(window);
@@ -116,7 +108,7 @@ int main(void)
         app_render();
     }
     coordinate_system_free(cs);    
-    SDL_FreeCursor(cursor);
+    SDL_FreeCursor(hand_cursor);
 
     app_close();
     return 0;
