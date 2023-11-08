@@ -14,6 +14,7 @@ typedef struct InputData
     bool current_mouse_button_state[5];
     bool old_mouse_button_state[5];
     SDL_Point mouse_position;
+    SDL_Point old_mouse_position;
     int mouse_wheel_delta;
 
     //keyboard
@@ -32,6 +33,7 @@ bool input_is_key_pressed(int key);
 bool input_is_key_released(int key);
 
 SDL_Point input_get_mouse_position();
+SDL_Point input_get_mouse_motion();
 int input_get_mouse_wheel_delta();
 
 //internal functions

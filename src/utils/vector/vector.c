@@ -58,6 +58,52 @@ void vector_push_back(Vector* vector, void* value)
 	}
 	vector->data[vector->size++] = value;
 }
+void vector_pop_back(Vector* vector)
+{
+	if (vector == NULL || vector->size == 0)
+		return;
+	vector->size--;
+}
+void vector_insert(Vector* vector, size_t idx, void* value)
+{
+	if (vector == NULL || idx > vector->size)
+		return;
+	if (vector->size == vector->capacity)
+	{
+		vector->capacity = vector->capacity == 0 ? 1 : vector->capacity * 2;
+		vector->data = (void**)realloc(vector->data, sizeof(void*) * vector->capacity);
+		if (vector->data == NULL)
+		{
+			printf("failed to allocate memory for vector data\n");
+			exit(1);
+		}
+	}
+	for (size_t i = vector->size; i > idx; i--)
+		vector->data[i] = vector->data[i - 1];
+	vector->data[idx] = value;
+	vector->size++;
+}
+void vector_remove_at(Vector* vector, size_t idx)
+{
+	if (vector == NULL || idx >= vector->size)
+		return;
+	for (size_t i = idx; i < vector->size - 1; i++)
+		vector->data[i] = vector->data[i + 1];
+	vector->size--;
+}
+void vector_remove(Vector* vector, void* value)
+{
+	if (vector == NULL)
+		return;
+	for (size_t i = 0; i < vector->size; i++)
+	{
+		if (vector->data[i] == value)
+		{
+			vector_remove_at(vector, i);
+			return;
+		}
+	}
+}
 void vector_reserve(Vector* vector, size_t capacity)
 {
 	if (vector == NULL)

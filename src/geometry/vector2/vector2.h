@@ -24,9 +24,10 @@ Vector2 vector2_right();
 
 Vector2 vector2_add(Vector2 a, Vector2 b);
 Vector2 vector2_subtract(Vector2 a, Vector2 b);
-Vector2 vector2_multiply(Vector2 a, double b);
-Vector2 vector2_divide(Vector2 a, double b);
+Vector2 vector2_scale(Vector2 a, double b);
 Vector2 vector2_negate(Vector2 a);
+Vector2 vector2_multiply(Vector2 a, Vector2 b);
+Vector2 vector2_divide(Vector2 a, Vector2 b);
 double vector2_dot(Vector2 a, Vector2 b);
 double vector2_length(Vector2 a);
 double vector2_distance(Vector2 a, Vector2 b);

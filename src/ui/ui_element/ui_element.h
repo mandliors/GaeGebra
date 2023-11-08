@@ -29,11 +29,13 @@ typedef struct UIElement
 	void (*destroy)(UIElement* self);
 } UIElement;
 
+typedef struct UIContainer UIContainer;
 typedef struct UIContainer
 {
 	UIElement base;
 
 	Vector* children;
+	void (*on_size_changed)(UIContainer* self, SDL_Point size);
 } UIContainer;
 
 typedef struct UIPanel
@@ -149,7 +151,7 @@ typedef struct UISplitButton
 } UISplitButton;
 
 //API functions
-UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints);
+UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints, void (*on_size_changed)(UIContainer* self, SDL_Point size));
 UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color color, Color border_color, Uint32 border_width, Uint32 roundness);
 UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const char* text, Color color);
 UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const char* text, Color color, Color text_color, void (*on_click)(UIButton* self));

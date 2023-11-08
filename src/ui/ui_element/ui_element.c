@@ -90,7 +90,7 @@ static void __ui_element_recalculate(UIElement* sibling, UIElement* element);
 static int __ui_calculate_size(UIConstraint* constraint, int parent_size);
 static int __ui_calculate_position(UIConstraint* constraint, int sibling_position, int sibling_size, int parent_position, int parent_size, int size);
 
-UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
+UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints, void (*on_size_changed)(UIContainer* self, SDL_Point size))
 {
     UIContainer* container = (UIContainer*)malloc(sizeof(UIContainer));
     UIElement* element = (UIElement*)container;
@@ -105,6 +105,7 @@ UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints)
     element->destroy = _ui_container_destroy;
 
     container->children = vector_create(0);
+    container->on_size_changed = on_size_changed;
     if (parent != NULL && parent->children->size > 0)
         container->base.recalculate((UIElement*)vector_get(parent->children, parent->children->size - 1), element);
     else
@@ -496,6 +497,8 @@ void _ui_container_recalculate(UIElement* sibling, UIElement* self)
             child->recalculate(sibling, child);
         }
     }
+    if (container->on_size_changed)
+        container->on_size_changed(container, self->size);
 }
 void _ui_container_render(UIElement* self)
 {
