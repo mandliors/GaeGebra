@@ -4,7 +4,7 @@
 #include "../../utils/vector/vector.h"
 #include "../shape/shape.h"
 
-#define INITIAL_ZOOM 10
+#define INITIAL_ZOOM 20
 
 typedef struct CoordinateSystem
 {
@@ -25,6 +25,7 @@ Vector2 coordinates_to_screen(CoordinateSystem* cs, Vector2 point);
 void coordinate_system_add_shape(CoordinateSystem* cs, Shape* shape);
 void coordinate_system_remove_shape(CoordinateSystem* cs, Shape* shape);
 
+bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point);
 Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point);
 
 void coordinate_system_translate(CoordinateSystem* cs, Vector2 translation);

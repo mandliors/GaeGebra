@@ -1,6 +1,7 @@
 #include "coordinate_system.h"
 
 #include "../../renderer/renderer.h"
+#include "../../utils/math/math.h"
 
 static double _x_screen_to_coordinate(CoordinateSystem* cs, double x);
 static double _y_screen_to_coordinate(CoordinateSystem* cs, double y);
@@ -60,9 +61,15 @@ void coordinate_system_remove_shape(CoordinateSystem* cs, Shape* shape)
     vector_remove(cs->shapes, shape);
 }
 
-Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
+bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point)
 {
     if (cs == NULL)
+        return false;
+    return check_collision_point_rect(point.x, point.y, cs->position.x, cs->position.y, cs->size.x, cs->size.y);
+}
+Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
+{
+    if (cs == NULL || !coordinate_system_is_hovered(cs, point))
         return NULL;
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
@@ -97,35 +104,37 @@ void coordinate_system_draw(CoordinateSystem* cs)
 {
     if (cs == NULL)
         return;
-    
+
+    Color grid_color = color_from_grayscale(240);
     double step = cs->zoom;
     double y = cs->origin.y * cs->size.y + cs->position.y;
     for (double x = cs->origin.x * cs->size.x; x > -step; x -= step)
     {
-        Vector2 p1 = vector2_create(x, y - 5);
-        Vector2 p2 = vector2_create(x, y + 5);
-        renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 1, BLACK);
+        renderer_draw_line(x, cs->position.y - 10, x, cs->position.y + cs->size.y + 10, 1, grid_color);
+        renderer_draw_line(x, y - 5, x, y + 5, 1, BLACK);
     }
     for (double x = cs->origin.x * cs->size.x; x < cs->size.x + step; x += step)
     {
-        Vector2 p1 = vector2_create(x, y - 5);
-        Vector2 p2 = vector2_create(x, y + 5);
-        renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 1, BLACK);
+        renderer_draw_line(x, cs->position.y - 10, x, cs->position.y + cs->size.y + 10, 1, grid_color);
+        renderer_draw_line(x, y - 5, x, y + 5, 1, BLACK);
     }
 
     double x = cs->origin.x * cs->size.x + cs->position.x;
     for (double y = cs->origin.y * cs->size.y + cs->position.y; y > -step; y -= step)
     {
-        Vector2 p1 = vector2_create(x + 5, y);
-        Vector2 p2 = vector2_create(x - 5, y);
-        renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 1, BLACK);
+        renderer_draw_line(cs->position.x - 10, y, cs->position.x - 10 + cs->size.x + 10, y, 1, grid_color);
+        renderer_draw_line(x + 5, y, x - 5, y, 1, BLACK);
     }
     for (double y = cs->origin.y * cs->size.y + cs->position.y; y < cs->size.y + cs->position.y + step; y += step)
     {
-        Vector2 p1 = vector2_create(x + 5, y);
-        Vector2 p2 = vector2_create(x - 5, y);
-        renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 1, BLACK);
+        renderer_draw_line(cs->position.x - 10, y, cs->position.x - 10 + cs->size.x + 10, y, 1, grid_color);
+        renderer_draw_line(x + 5, y, x - 5, y, 1, BLACK);
     }
+
+    x = cs->position.x + cs->origin.x * cs->size.x;
+    y = cs->position.y + cs->origin.y * cs->size.y;
+    renderer_draw_line(x, cs->position.y - 10, x, cs->position.y + cs->size.y + 10, 1, BLACK);
+    renderer_draw_line(cs->position.x - 10, y, cs->position.x + cs->size.x + 10, y, 1, BLACK);
 
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
