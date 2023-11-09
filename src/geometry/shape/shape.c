@@ -1,92 +1,173 @@
 #include "shape.h"
 
+#include "../coordinate_system/coordinate_system.h"
 #include "../../renderer/renderer.h"
 
-Point* point_create(Vector2 position)
+static void _point_draw(CoordinateSystem* cs, IShape* self);
+static void _line_draw(CoordinateSystem* cs, IShape* self);
+static void _circle_draw(CoordinateSystem* cs, IShape* self);
+
+static void _point_translate(CoordinateSystem* cs, IShape* self, Vector2 translation);
+static void _line_translate(CoordinateSystem* cs, IShape* self, Vector2 translation);
+static void _circle_translate(CoordinateSystem* cs, IShape* self, Vector2 translation);
+
+static void _point_destroy(CoordinateSystem* cs, IShape* self);
+static void _line_destroy(CoordinateSystem* cs, IShape* self);
+static void _circle_destroy(CoordinateSystem* cs, IShape* self);
+
+static bool _point_overlap(CoordinateSystem* cs, IShape* self, Vector2 point);
+static bool _line_overlap(CoordinateSystem* cs, IShape* self, Vector2 point);
+static bool _circle_overlap(CoordinateSystem* cs, IShape* self, Vector2 point);
+
+static bool _point_is_defined_by(IShape* self, IShape* shape);
+static bool _line_is_defined_by(IShape* self, IShape* shape);
+static bool _circle_is_defined_by(IShape* self, IShape* shape);
+
+static void _coordinate_system_remove_shape(CoordinateSystem* cs, IShape* shape);
+
+Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
 {
     Point* point = malloc(sizeof(Point));
     point->base.draw = _point_draw;
+    point->base.translate = _point_translate;
+    point->base.destroy = _point_destroy;
     point->base.overlap_point = _point_overlap;
-    point->base.recalculate = NULL;
-    point->base.free = _point_free;
-    point->position = position;
+    point->base.is_defined_by = _point_is_defined_by;
+    point->coordinates = coordinates;
+    vector_push_back(cs->shapes, point);
     return point;
 }
-Line* line_create(Point* p1, Point* p2)
+Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
 {
     Line* line = malloc(sizeof(Line));
     line->base.draw = _line_draw;
+    line->base.translate = _line_translate;
+    line->base.destroy = _line_destroy;
     line->base.overlap_point = _line_overlap;
-    line->base.recalculate = NULL;
-    line->base.free = _line_free;
+    line->base.is_defined_by = _line_is_defined_by;
     line->p1 = p1;
     line->p2 = p2;
-    line->normal = vector2_normalize(vector2_rotate90(vector2_subtract(p2->position, p1->position)));
+    line->normal = vector2_normalize(vector2_rotate90(vector2_subtract(p2->coordinates, p1->coordinates)));
+    vector_push_back(cs->shapes, line);
     return line;
 }
-Circle* circle_create(Point* center, double radius)
+Circle* circle_create(CoordinateSystem* cs, Point* center, double radius)
 {
     Circle* circle = malloc(sizeof(Circle));
     circle->base.draw = _circle_draw;
+    circle->base.translate = _circle_translate;
+    circle->base.destroy = _circle_destroy;
     circle->base.overlap_point = _circle_overlap;
-    circle->base.recalculate = NULL;
-    circle->base.free = _circle_free;
+    circle->base.is_defined_by = _circle_is_defined_by;
     circle->center = center;
     circle->radius = radius;
+    vector_push_back(cs->shapes, circle);
     return circle;
 }
 
-bool _point_overlap(Shape* self, Vector2 point)
+static void _point_destroy(CoordinateSystem* cs, IShape* self)
 {
-    return vector2_distance(((Point*)self)->position, point) <= OVERLAP_DISTANCE;
+    _coordinate_system_remove_shape(cs, self);
+    free((Point*)self);
+    self = NULL;
 }
-bool _line_overlap(Shape* self, Vector2 point)
+static void _line_destroy(CoordinateSystem* cs, IShape* self)
+{
+    _coordinate_system_remove_shape(cs, self);
+    free((Line*)self);
+    self = NULL;
+}
+static void _circle_destroy(CoordinateSystem* cs, IShape* self)
+{
+    _coordinate_system_remove_shape(cs, self);
+    free((Circle*)self);
+    self = NULL;
+}
+
+static void _point_draw(CoordinateSystem* cs, IShape* self)
+{
+    Point* point = (Point*)self;
+    Vector2 position = coordinates_to_screen(cs, point->coordinates);
+    renderer_draw_filled_circle(position.x, position.y, 5, GRAY);
+    renderer_draw_circle(position.x, position.y, 5, BLACK);
+}
+static void _line_draw(CoordinateSystem* cs, IShape* self)
 {
     Line* line = (Line*)self;
-    return fabs(vector2_dot(vector2_subtract(point, line->p1->position), line->normal)) <= OVERLAP_DISTANCE;
+    Vector2 p1 = coordinates_to_screen(cs, line->p1->coordinates);
+    Vector2 p2 = coordinates_to_screen(cs, line->p2->coordinates);
+    renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 2, BLACK);
+}
+static void _circle_draw(CoordinateSystem* cs, IShape* self)
+{
+    Circle* circle = (Circle*)self;
+    Vector2 position = coordinates_to_screen(cs, circle->center->coordinates);
+    renderer_draw_circle(position.x, position.y, circle->radius * cs->zoom, GRAY);
+    for (size_t r = circle->radius * cs->zoom - 1; r < circle->radius * cs->zoom + 2; r++)
+        renderer_draw_circle(position.x, position.y, r, BLACK);
+}
+
+static void _point_translate(CoordinateSystem* cs, IShape* self, Vector2 translation)
+{
+    Point* point = (Point*)self;
+    point->coordinates = screen_to_coordinates(cs, vector2_add(coordinates_to_screen(cs, point->coordinates), translation));
+}
+static void _line_translate(CoordinateSystem* cs, IShape* self, Vector2 translation)
+{
+    Line* line = (Line*)self;
+    _point_translate(cs, (IShape*)line->p1, translation);
+    _point_translate(cs, (IShape*)line->p2, translation);
+}
+static void _circle_translate(CoordinateSystem* cs, IShape* self, Vector2 translation)
+{
+    Circle* circle = (Circle*)self;
+    _point_translate(cs, (IShape*)circle->center, translation);
+}
+
+static bool _point_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
+{
+    return vector2_distance(coordinates_to_screen(cs, ((Point*)self)->coordinates), point) <= OVERLAP_DISTANCE;
+}
+static bool _line_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
+{
+    Line* line = (Line*)self;
+    return fabs(vector2_dot(vector2_subtract(point, coordinates_to_screen(cs, line->p1->coordinates)), vector2_rotate90(line->normal))) <= OVERLAP_DISTANCE;
 
     //My method (also works)
-    //return fabs(line->normal.x * point.x + line->normal.y * point.y -
-    //           (line->normal.x * line->p1->position.x + line->normal.y * line->p1->position.y)) <=
-    //           sqrt(line->normal.x * line->normal.x + line->normal.y * line->normal.y) * OVERLAP_DISTANCE;
+    //return fabs(vector2_dot(line->normal, point) - 
+    //            vector2_dot(line->normal, coordinates_to_screen(cs, line->p1->coordinates))) 
+    //            <= vector2_length(line->normal) * OVERLAP_DISTANCE;
 }
-bool _circle_overlap(Shape* self, Vector2 point)
+static bool _circle_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 {
     Circle* circle = (Circle*)self;
-    return fabs(vector2_distance(circle->center->position, point) - circle->radius) <= OVERLAP_DISTANCE;
+    return fabs(vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), point) - circle->radius * cs->zoom) <= OVERLAP_DISTANCE;
 }
 
-void _point_free(Shape* self)
+static bool _point_is_defined_by(IShape* self __attribute__((unused)), IShape* shape __attribute__((unused)))
 {
-    Point* point = (Point*)self;
-    free(point);
+    return false;
 }
-void _line_free(Shape* self)
+static bool _line_is_defined_by(IShape* self, IShape* shape)
 {
     Line* line = (Line*)self;
-    free(line);
+    return (IShape*)line->p1 == shape || (IShape*)line->p2 == shape;
 }
-void _circle_free(Shape* self)
+static bool _circle_is_defined_by(IShape* self, IShape* shape)
 {
-    Circle* circle = (Circle*)self;
-    free(circle);
+    return (IShape*)((Circle*)self)->center == shape;
 }
 
-void _point_draw(Shape* self)
+static void _coordinate_system_remove_shape(CoordinateSystem* cs, IShape* shape)
 {
-    Point* point = (Point*)self;
-    renderer_draw_filled_circle(point->position.x, point->position.y, 5, BLACK);
-    renderer_draw_circle(point->position.x, point->position.y, 5, GRAY);
-}
-void _line_draw(Shape* self)
-{
-    Line* line = (Line*)self;
-    renderer_draw_line(line->p1->position.x, line->p1->position.y, line->p2->position.x, line->p2->position.y, 2, BLACK);
-}
-void _circle_draw(Shape* self)
-{
-    Circle* circle = (Circle*)self;
-    renderer_draw_circle(circle->center->position.x, circle->center->position.y, circle->radius, GRAY);
-    for (size_t r = circle->radius - 1; r < circle->radius + 2; r++)
-        renderer_draw_circle(circle->center->position.x, circle->center->position.y, r, BLACK);
+    vector_remove(cs->shapes, shape);
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        IShape* shp = vector_get(cs->shapes, i);
+        if (shp->is_defined_by(shp, (IShape*)shape))
+        {
+            shp->destroy(cs, shp);
+            i--;
+        }
+    }
 }

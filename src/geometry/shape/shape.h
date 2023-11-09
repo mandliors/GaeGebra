@@ -6,47 +6,37 @@
 
 #define OVERLAP_DISTANCE 5
 
-typedef struct Shape Shape;
-typedef struct Shape
+typedef struct CoordinateSystem CoordinateSystem;
+typedef struct IShape IShape;
+typedef struct IShape
 {
-    void (*draw)(Shape* self);
-    bool (*overlap_point)(Shape* self, Vector2 point);
-    void (*recalculate)(Shape* self);
-    void (*free)(Shape* self);
-} Shape;
+    void (*draw)(CoordinateSystem* cs, IShape* self);
+    void (*translate)(CoordinateSystem* cs, IShape* self, Vector2 translation);
+    void (*destroy)(CoordinateSystem* cs, IShape* self);
+    bool (*overlap_point)(CoordinateSystem* cs, IShape* self, Vector2 point);
+    bool (*is_defined_by)(IShape* self, IShape* shape);
+} IShape;
 
 typedef struct Point
 {
-    Shape base;
-    Vector2 position;
+    IShape base;
+    Vector2 coordinates;
 } Point;
 
 typedef struct Line
 {
-    Shape base;
+    IShape base;
     Point *p1, *p2;
     Vector2 normal;
 } Line;
 
 typedef struct Circle
 {
-    Shape base;
+    IShape base;
     Point* center;
     double radius;
 } Circle;
 
-Point* point_create(Vector2 position);
-Line* line_create(Point* p1, Point* p2);
-Circle* circle_create(Point* center, double radius);
-
-bool _point_overlap(Shape* self, Vector2 point);
-bool _line_overlap(Shape* self, Vector2 point);
-bool _circle_overlap(Shape* self, Vector2 point);
-
-void _point_free(Shape* self);
-void _line_free(Shape* self);
-void _circle_free(Shape* self);
-
-void _point_draw(Shape* self);
-void _line_draw(Shape* self);
-void _circle_draw(Shape* self);
+Point* point_create(CoordinateSystem* cs, Vector2 coordinates);
+Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2);
+Circle* circle_create(CoordinateSystem* cs, Point* center, double radius);

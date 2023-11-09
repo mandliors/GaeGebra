@@ -83,6 +83,15 @@ void vector_insert(Vector* vector, size_t idx, void* value)
 	vector->data[idx] = value;
 	vector->size++;
 }
+bool vector_contains(Vector* vector, void* value)
+{
+	if (vector == NULL)
+		return false;
+	for (size_t i = 0; i < vector->size; i++)
+		if (vector->data[i] == value)
+			return true;
+	return false;
+}
 void vector_remove_at(Vector* vector, size_t idx)
 {
 	if (vector == NULL || idx >= vector->size)

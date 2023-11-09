@@ -22,10 +22,10 @@ void coordinate_system_free(CoordinateSystem* cs)
 {
     if (cs == NULL)
         return;
-    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    while (vector_size(cs->shapes) > 0)
     {
-        Shape* shape = vector_get(cs->shapes, i);
-        shape->free(shape);
+        IShape* shape = vector_get(cs->shapes, 0);
+        shape->destroy(cs, shape);
     }
     vector_free(cs->shapes);
     free(cs);
@@ -48,33 +48,20 @@ Vector2 coordinates_to_screen(CoordinateSystem* cs, Vector2 point)
                      _y_coordinate_to_screen(cs, point.y)};
 }
 
-void coordinate_system_add_shape(CoordinateSystem* cs, Shape* shape)
-{
-    if (cs == NULL)
-        return;
-    vector_push_back(cs->shapes, shape);
-}
-void coordinate_system_remove_shape(CoordinateSystem* cs, Shape* shape)
-{
-    if (cs == NULL)
-        return;
-    vector_remove(cs->shapes, shape);
-}
-
 bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point)
 {
     if (cs == NULL)
         return false;
     return check_collision_point_rect(point.x, point.y, cs->position.x, cs->position.y, cs->size.x, cs->size.y);
 }
-Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
+IShape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
 {
     if (cs == NULL || !coordinate_system_is_hovered(cs, point))
         return NULL;
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
-        Shape* shape = vector_get(cs->shapes, i);
-        if (shape->overlap_point(shape, point))
+        IShape* shape = vector_get(cs->shapes, i);
+        if (shape->overlap_point(cs, shape, point))
             return shape;
     }
     return NULL;
@@ -138,8 +125,8 @@ void coordinate_system_draw(CoordinateSystem* cs)
 
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
-        Shape* shape = vector_get(cs->shapes, i);
-        shape->draw(shape);
+        IShape* shape = vector_get(cs->shapes, i);
+        shape->draw(cs, shape);
     }
 }
 

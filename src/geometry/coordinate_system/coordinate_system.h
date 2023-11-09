@@ -22,11 +22,8 @@ void coordinate_system_free(CoordinateSystem* cs);
 Vector2 screen_to_coordinates(CoordinateSystem* cs, Vector2 point);
 Vector2 coordinates_to_screen(CoordinateSystem* cs, Vector2 point);
 
-void coordinate_system_add_shape(CoordinateSystem* cs, Shape* shape);
-void coordinate_system_remove_shape(CoordinateSystem* cs, Shape* shape);
-
 bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point);
-Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point);
+IShape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point);
 
 void coordinate_system_translate(CoordinateSystem* cs, Vector2 translation);
 void coordinate_system_zoom(CoordinateSystem* cs, double zoom);
