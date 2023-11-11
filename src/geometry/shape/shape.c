@@ -47,7 +47,6 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
     line->base.is_defined_by = _line_is_defined_by;
     line->p1 = p1;
     line->p2 = p2;
-    line->normal = vector2_normalize(vector2_rotate90(vector2_subtract(p2->coordinates, p1->coordinates)));
     vector_push_back(cs->shapes, line);
     return line;
 }
@@ -102,7 +101,6 @@ static void _circle_draw(CoordinateSystem* cs, IShape* self)
 {
     Circle* circle = (Circle*)self;
     Vector2 position = coordinates_to_screen(cs, circle->center->coordinates);
-    renderer_draw_circle(position.x, position.y, circle->radius * cs->zoom, GRAY);
     for (size_t r = circle->radius * cs->zoom - 1; r < circle->radius * cs->zoom + 2; r++)
         renderer_draw_circle(position.x, position.y, r, BLACK);
 }
@@ -113,7 +111,7 @@ static void _point_translate(CoordinateSystem* cs, IShape* self, Vector2 transla
     point->coordinates = screen_to_coordinates(cs, vector2_add(coordinates_to_screen(cs, point->coordinates), translation));
 }
 static void _line_translate(CoordinateSystem* cs, IShape* self, Vector2 translation)
-{
+{       
     Line* line = (Line*)self;
     _point_translate(cs, (IShape*)line->p1, translation);
     _point_translate(cs, (IShape*)line->p2, translation);
@@ -131,12 +129,11 @@ static bool _point_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 static bool _line_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 {
     Line* line = (Line*)self;
-    return fabs(vector2_dot(vector2_subtract(point, coordinates_to_screen(cs, line->p1->coordinates)), vector2_rotate90(line->normal))) <= OVERLAP_DISTANCE;
-
-    //My method (also works)
-    //return fabs(vector2_dot(line->normal, point) - 
-    //            vector2_dot(line->normal, coordinates_to_screen(cs, line->p1->coordinates))) 
-    //            <= vector2_length(line->normal) * OVERLAP_DISTANCE;
+    Vector2 screen_normal = vector2_normalize(vector2_rotate90(vector2_subtract(coordinates_to_screen(cs, line->p2->coordinates), coordinates_to_screen(cs, line->p1->coordinates))));
+    //My method
+    return fabs(vector2_dot(screen_normal, point) - 
+                vector2_dot(screen_normal, coordinates_to_screen(cs, line->p1->coordinates))) 
+                <= vector2_length(screen_normal) * OVERLAP_DISTANCE;
 }
 static bool _circle_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 {

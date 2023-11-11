@@ -27,7 +27,6 @@ typedef struct Line
 {
     IShape base;
     Point *p1, *p2;
-    Vector2 normal;
 } Line;
 
 typedef struct Circle

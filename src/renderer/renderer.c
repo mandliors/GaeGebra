@@ -4,6 +4,8 @@
 SDL_Renderer* target_renderer;
 Font* default_font;
 
+static void _renderer_draw_line(int x1, int y1, int x2, int y2, Color color);
+
 void renderer_set_default_font(Font* font)
 {
 	default_font = font;
@@ -28,7 +30,30 @@ void renderer_draw_pixel(int x, int y, Color color)
 }
 void renderer_draw_line(int x1, int y1, int x2, int y2, int thickness, Color color)
 {
-	thickLineRGBA(target_renderer, x1, y1, x2, y2, thickness, color.r, color.g, color.b, color.a);
+	if (thickness == 1)
+	{
+		_renderer_draw_line(x1, y1, x2, y2, color);
+		return;
+	}
+
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float length = sqrt(dx * dx + dy * dy);
+    if (length > 0.0)
+	{
+        dx /= length;
+        dy /= length;
+    }
+    float ox = thickness * 0.5 * dy;
+    float oy = thickness * 0.5 * (-dx);
+
+    float x1a = x1 + ox; float x2a = x2 + ox;
+    float y1a = y1 + oy; float y2a = y2 + oy;
+    float x1b = x1 - ox; float x2b = x2 - ox;
+    float y1b = y1 - oy; float y2b = y2 - oy;
+
+	aatrigonRGBA(target_renderer, x1a, y1a, x2a, y2a, x2b, y2b, color.r, color.g, color.b, color.a);
+	aatrigonRGBA(target_renderer, x1a, y1a, x2b, y2b, x1b, y1b, color.r, color.g, color.b, color.a);
 }
 void renderer_draw_rect(int x, int y, int width, int height, Color color)
 {
@@ -122,4 +147,8 @@ SDL_Point renderer_query_text_size(const char* text)
 void _renderer_set_target(SDL_Renderer* renderer)
 {
 	target_renderer = renderer;
+}
+static void _renderer_draw_line(int x1, int y1, int x2, int y2, Color color)
+{
+	aalineRGBA(target_renderer, x1, y1, x2, y2, color.r, color.g, color.b, color.a);
 }

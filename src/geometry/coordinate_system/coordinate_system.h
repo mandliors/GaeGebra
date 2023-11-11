@@ -17,7 +17,7 @@ typedef struct CoordinateSystem
 } CoordinateSystem;
 
 CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vector2 origin);
-void coordinate_system_free(CoordinateSystem* cs);
+void coordinate_system_destroy(CoordinateSystem* cs);
 
 Vector2 screen_to_coordinates(CoordinateSystem* cs, Vector2 point);
 Vector2 coordinates_to_screen(CoordinateSystem* cs, Vector2 point);

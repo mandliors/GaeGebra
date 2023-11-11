@@ -18,7 +18,7 @@ CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vecto
     cs->shapes = vector_create(0);
     return cs;
 }
-void coordinate_system_free(CoordinateSystem* cs)
+void coordinate_system_destroy(CoordinateSystem* cs)
 {
     if (cs == NULL)
         return;
