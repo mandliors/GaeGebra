@@ -33,9 +33,9 @@ typedef struct Circle
 {
     IShape base;
     Point* center;
-    double radius;
+    Point* perimeter_point;
 } Circle;
 
 Point* point_create(CoordinateSystem* cs, Vector2 coordinates);
 Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2);
-Circle* circle_create(CoordinateSystem* cs, Point* center, double radius);
+Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_point);

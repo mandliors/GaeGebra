@@ -3,6 +3,8 @@
 #include "../coordinate_system/coordinate_system.h"
 #include "../../renderer/renderer.h"
 
+#include <math.h>
+
 static void _point_draw(CoordinateSystem* cs, IShape* self);
 static void _line_draw(CoordinateSystem* cs, IShape* self);
 static void _circle_draw(CoordinateSystem* cs, IShape* self);
@@ -50,7 +52,7 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
     vector_push_back(cs->shapes, line);
     return line;
 }
-Circle* circle_create(CoordinateSystem* cs, Point* center, double radius)
+Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_point)
 {
     Circle* circle = malloc(sizeof(Circle));
     circle->base.draw = _circle_draw;
@@ -59,7 +61,7 @@ Circle* circle_create(CoordinateSystem* cs, Point* center, double radius)
     circle->base.overlap_point = _circle_overlap;
     circle->base.is_defined_by = _circle_is_defined_by;
     circle->center = center;
-    circle->radius = radius;
+    circle->perimeter_point = perimeter_point;
     vector_push_back(cs->shapes, circle);
     return circle;
 }
@@ -95,13 +97,18 @@ static void _line_draw(CoordinateSystem* cs, IShape* self)
     Line* line = (Line*)self;
     Vector2 p1 = coordinates_to_screen(cs, line->p1->coordinates);
     Vector2 p2 = coordinates_to_screen(cs, line->p2->coordinates);
-    renderer_draw_line(p1.x, p1.y, p2.x, p2.y, 2, BLACK);
+    Vector2 dir = vector2_normalize(vector2_subtract(p2, p1));
+    double scale = fmax(cs->position.x + cs->size.x, cs->position.y + cs->size.y);
+    Vector2 p1_translated = vector2_add(p1, vector2_scale(dir, -scale));
+    Vector2 p2_translated = vector2_add(p2, vector2_scale(dir,  scale));
+    renderer_draw_line(p1_translated.x, p1_translated.y, p2_translated.x, p2_translated.y, 2, BLACK);
 }
 static void _circle_draw(CoordinateSystem* cs, IShape* self)
 {
     Circle* circle = (Circle*)self;
     Vector2 position = coordinates_to_screen(cs, circle->center->coordinates);
-    for (size_t r = circle->radius * cs->zoom - 1; r < circle->radius * cs->zoom + 2; r++)
+    double radius = vector2_distance(position, coordinates_to_screen(cs, circle->perimeter_point->coordinates));
+    for (size_t r = radius - 1; r < radius + 2; r++)
         renderer_draw_circle(position.x, position.y, r, BLACK);
 }
 
@@ -138,7 +145,8 @@ static bool _line_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 static bool _circle_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 {
     Circle* circle = (Circle*)self;
-    return fabs(vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), point) - circle->radius * cs->zoom) <= OVERLAP_DISTANCE;
+    double radius = vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), coordinates_to_screen(cs, circle->perimeter_point->coordinates));
+    return fabs(vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), point) - radius * cs->zoom) <= OVERLAP_DISTANCE;
 }
 
 static bool _point_is_defined_by(IShape* self __attribute__((unused)), IShape* shape __attribute__((unused)))
@@ -152,7 +160,7 @@ static bool _line_is_defined_by(IShape* self, IShape* shape)
 }
 static bool _circle_is_defined_by(IShape* self, IShape* shape)
 {
-    return (IShape*)((Circle*)self)->center == shape;
+    return (IShape*)((Circle*)self)->center == shape || (IShape*)((Circle*)self)->perimeter_point == shape;
 }
 
 static void _coordinate_system_remove_shape(CoordinateSystem* cs, IShape* shape)

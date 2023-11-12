@@ -108,7 +108,7 @@ double app_get_time()
 }
 double app_get_delta_time()
 {
-    return (double)app_data.target_frame_time / 1000.0;
+    return (double)app_data.delta_time;
 }
 
 void _app_add_window(Window* window)

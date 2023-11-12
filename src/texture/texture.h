@@ -19,4 +19,5 @@ Texture* texture_load(SDL_Renderer* renderer, const char* path);
 
 //internal functions
 void _texture_init();
+void _texture_add(Texture* texture);
 void _texture_close();

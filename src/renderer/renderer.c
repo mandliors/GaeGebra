@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "../texture/texture.h"
 #include "../font/font.h"
 
 SDL_Renderer* target_renderer;
@@ -19,6 +20,40 @@ void renderer_reset_clip_rect()
 {
 	SDL_RenderSetClipRect(target_renderer, NULL);
 }
+
+Texture* renderer_create_framebuffer(int width, int height)
+{
+	SDL_Texture* framebuffer = SDL_CreateTexture(target_renderer,
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET,
+        width, height);
+	
+	Texture* texture = (Texture*)malloc(sizeof(Texture));
+	texture->texture = framebuffer;
+	texture->width = width;
+	texture->height = height;
+	_texture_add(texture);
+
+	return texture;
+}
+void renderer_resize_framebuffer(Texture* framebuffer, int width, int height)
+{
+	SDL_DestroyTexture(framebuffer->texture);
+	framebuffer->texture = SDL_CreateTexture(target_renderer,
+		SDL_PIXELFORMAT_RGBA8888,
+		SDL_TEXTUREACCESS_TARGET,
+		width, height);
+	framebuffer->width = width;
+	framebuffer->height = height;
+}
+void renderer_bind_framebuffer(Texture* framebuffer)
+{
+	if (framebuffer == NULL)
+		SDL_SetRenderTarget(target_renderer, NULL);
+	else
+		SDL_SetRenderTarget(target_renderer, framebuffer->texture);
+}
+
 void renderer_clear(Color color)
 {
 	SDL_SetRenderDrawColor(target_renderer, color.r, color.g, color.b, color.a);

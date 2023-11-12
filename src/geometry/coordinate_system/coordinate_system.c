@@ -123,9 +123,9 @@ void coordinate_system_draw(CoordinateSystem* cs)
     renderer_draw_line(x, cs->position.y - 10, x, cs->position.y + cs->size.y + 10, 1, BLACK);
     renderer_draw_line(cs->position.x - 10, y, cs->position.x + cs->size.x + 10, y, 1, BLACK);
 
-    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    for (size_t i = vector_size(cs->shapes); i >= 1; i--)
     {
-        IShape* shape = vector_get(cs->shapes, i);
+        IShape* shape = vector_get(cs->shapes, i - 1);
         shape->draw(cs, shape);
     }
 }

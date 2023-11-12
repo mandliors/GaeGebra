@@ -31,12 +31,12 @@ bool input_is_key_released(int key)
 
 SDL_Point input_get_mouse_position()
 {
-    return target_input_data->mouse_position;
+    return target_input_data->current_mouse_position;
 }
 SDL_Point input_get_mouse_motion()
 {
-    return (SDL_Point) { target_input_data->mouse_position.x - target_input_data->old_mouse_position.x,
-                         target_input_data->mouse_position.y - target_input_data->old_mouse_position.y };
+    return (SDL_Point) { target_input_data->current_mouse_position.x - target_input_data->old_mouse_position.x,
+                         target_input_data->current_mouse_position.y - target_input_data->old_mouse_position.y };
 }
 int input_get_mouse_wheel_delta()
 {
@@ -50,8 +50,8 @@ void _input_init(InputData* input_data)
         input_data->current_mouse_button_state[i] = false;
         input_data->old_mouse_button_state[i] = false;
     }
-    SDL_GetMouseState(&input_data->mouse_position.x, &input_data->mouse_position.y);
-    input_data->old_mouse_position = input_data->mouse_position;
+    SDL_GetMouseState(&input_data->current_mouse_position.x, &input_data->current_mouse_position.y);
+    input_data->old_mouse_position = input_data->current_mouse_position;
     input_data->mouse_wheel_delta = 0;
 
     input_data->current_keyboard_state = (Uint8*)SDL_GetKeyboardState((int*)&input_data->key_count);
@@ -76,7 +76,7 @@ void _input_handle_event(InputData* input_data, SDL_Event* event)
         input_data->mouse_wheel_delta = event->wheel.y;
         break;
     case SDL_MOUSEMOTION:
-        SDL_GetMouseState(&input_data->mouse_position.x, &input_data->mouse_position.y);
+        SDL_GetMouseState(&input_data->current_mouse_position.x, &input_data->current_mouse_position.y);
         break;
     }
 }
@@ -84,7 +84,7 @@ void _input_reset(InputData* input_data)
 {
     memcpy(input_data->old_mouse_button_state, input_data->current_mouse_button_state, 5);
     memcpy(input_data->old_keyboard_state, input_data->current_keyboard_state, input_data->key_count);
-    input_data->old_mouse_position = input_data->mouse_position;
+    input_data->old_mouse_position = input_data->current_mouse_position;
     input_data->mouse_wheel_delta = 0;
 }
 void _input_close(InputData* input_data)

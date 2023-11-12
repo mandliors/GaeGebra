@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../vector2/vector2.h"
-#include "../../utils/vector/vector.h"
 #include "../shape/shape.h"
+#include "../vector2/vector2.h"
+#include "../../texture/texture.h"
+#include "../../utils/vector/vector.h"
 
 #define INITIAL_ZOOM 20
 

@@ -15,8 +15,12 @@
 void renderer_set_default_font(Font* font);
 void renderer_set_clip_rect(int x, int y, int width, int height);
 void renderer_reset_clip_rect();
-void renderer_clear(Color color);
 
+Texture* renderer_create_framebuffer(int width, int height);
+void renderer_resize_framebuffer(Texture* framebuffer, int width, int height);
+void renderer_bind_framebuffer(Texture* framebuffer);
+
+void renderer_clear(Color color);
 void renderer_draw_pixel(int x, int y, Color color);
 void renderer_draw_line(int x1, int y1, int x2, int y2, int thickness, Color color);
 void renderer_draw_rect(int x, int y, int width, int height, Color color);

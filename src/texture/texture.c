@@ -22,6 +22,10 @@ void _texture_init()
 {
 	textures = vector_create(0);
 }
+void _texture_add(Texture* texture)
+{
+	vector_push_back(textures, texture);
+}
 void _texture_close()
 {
 	for (size_t i = 0; i < vector_size(textures); i++)

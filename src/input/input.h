@@ -13,7 +13,7 @@ typedef struct InputData
     //mouse
     bool current_mouse_button_state[5];
     bool old_mouse_button_state[5];
-    SDL_Point mouse_position;
+    SDL_Point current_mouse_position;
     SDL_Point old_mouse_position;
     int mouse_wheel_delta;
 
