@@ -36,6 +36,29 @@ typedef struct Circle
     Point* perimeter_point;
 } Circle;
 
+/**
+ * @brief Creates a point in the coordinate system
+ * 
+ * @param cs The coordinate system to create the point in
+ * @param coordinates The coordinates of the point
+ * @return Point* The created point
+ */
 Point* point_create(CoordinateSystem* cs, Vector2 coordinates);
+/**
+ * @brief Creates a line in the coordinate system
+ * 
+ * @param cs The coordinate system to create the line in
+ * @param p1 A point of the line
+ * @param p2 Another point of the line (has to be different from p1)
+ * @return Line* The created line
+ */
 Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2);
+/**
+ * @brief Creates a circle in the coordinate system
+ * 
+ * @param cs The coordinate system to create the circle in
+ * @param center The center of the circle
+ * @param perimeter_point A point on the perimeter of the circle (has to be different from center)
+ * @return Circle* The created circle
+ */
 Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_point);

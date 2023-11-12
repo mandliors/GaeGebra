@@ -127,6 +127,7 @@ static void _circle_translate(CoordinateSystem* cs, IShape* self, Vector2 transl
 {
     Circle* circle = (Circle*)self;
     _point_translate(cs, (IShape*)circle->center, translation);
+    _point_translate(cs, (IShape*)circle->perimeter_point, translation);
 }
 
 static bool _point_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
@@ -146,7 +147,7 @@ static bool _circle_overlap(CoordinateSystem* cs, IShape* self, Vector2 point)
 {
     Circle* circle = (Circle*)self;
     double radius = vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), coordinates_to_screen(cs, circle->perimeter_point->coordinates));
-    return fabs(vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), point) - radius * cs->zoom) <= OVERLAP_DISTANCE;
+    return fabs(vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), point) - radius) <= OVERLAP_DISTANCE;
 }
 
 static bool _point_is_defined_by(IShape* self __attribute__((unused)), IShape* shape __attribute__((unused)))

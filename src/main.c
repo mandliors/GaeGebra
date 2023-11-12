@@ -196,9 +196,10 @@ int main(void)
         renderer_clear(WHITE);
         coordinate_system_draw(cs);
         
+        //fps (temporary)
         static char buffer[10];
-        sprintf(buffer, "fps: %.0lf", 1.0 / app_get_delta_time());
-        renderer_draw_text(buffer, 100, 100, BLACK);
+        sprintf(buffer, "Fps: %.0lf", 1.0 / app_get_delta_time());
+        renderer_draw_text(buffer, 10, 90, BLACK);
 
         app_render();
     }
