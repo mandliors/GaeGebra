@@ -94,14 +94,13 @@ int main(void)
 
     IShape* selected_shape = NULL;
     IShape* dragged_shape = NULL;
-    bool hand_cursor;
+    Point* placing_point = NULL;
 
     while (!window->close_requested)
     {
         //update
         app_update();
 
-        hand_cursor = false;
         if (dragged_shape != NULL)
         {
             if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
@@ -134,7 +133,6 @@ int main(void)
             }
             break;
         case STATE_CS_DRAGGED:
-            hand_cursor = true;
             if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
                 state = STATE_POINTER;
             else
@@ -153,8 +151,10 @@ int main(void)
         case STATE_LINE:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                IShape* point = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                selected_shape = point;
+                selected_shape = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                vector_pop_back(cs->shapes);
+                line_create(cs, (Point*)selected_shape, (Point*)placing_point);
                 dragged_shape = selected_shape;
                 state = STATE_LINE_POINT1_PLACED;
             }
@@ -162,10 +162,18 @@ int main(void)
         case STATE_LINE_POINT1_PLACED:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                IShape* point = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                line_create(cs, (Point*)selected_shape, (Point*)point);
-                selected_shape = point;
+                vector_push_back(cs->shapes, placing_point);
+                selected_shape = (IShape*)placing_point;
                 dragged_shape = selected_shape;
+                placing_point = NULL;
+                state = STATE_LINE; 
+            }
+            else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
+            {
+                vector_pop_back(cs->shapes);
+                placing_point->base.destroy(cs, (IShape*)placing_point);
+                placing_point = NULL;
+                selected_shape = NULL;
                 state = STATE_LINE;
             }
             break;
@@ -174,6 +182,9 @@ int main(void)
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
                 selected_shape = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));;
+                placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                vector_pop_back(cs->shapes);
+                circle_create(cs, (Point*)selected_shape, placing_point);
                 dragged_shape = selected_shape;
                 state = STATE_CIRCLE_CENTER_PLACED;
             }
@@ -184,26 +195,42 @@ int main(void)
                 //IShape* point = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
                 //selected_shape = (IShape*)circle_create(cs, (Point*)selected_shape, vector2_distance(coordinates_to_screen(cs,
                 //                ((Point*)selected_shape)->coordinates), coordinates_to_screen(cs, ((Point*)point)->coordinates)) / cs->zoom);
-                Point* point = (Point*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                circle_create(cs, (Point*)selected_shape, point);
-                selected_shape = (IShape*)point;
+                vector_push_back(cs->shapes, placing_point);
+                selected_shape = (IShape*)placing_point;
                 dragged_shape = selected_shape;
+                placing_point = NULL;
+                state = STATE_CIRCLE;
+            }
+            else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
+            {
+                vector_pop_back(cs->shapes);
+                placing_point->base.destroy(cs, (IShape*)placing_point);
+                placing_point = NULL;
+                selected_shape = NULL;
                 state = STATE_CIRCLE;
             }
             break;
         }
-        if (hand_cursor)
-            SDL_SetCursor(cursor_hand);
+        if (placing_point)
+        {
+            placing_point->coordinates = screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position()));
+            placing_point->base.draw(cs, (IShape*)placing_point);
+        }
         else
         {
             SDL_SetCursor(cursor_default);
-            for (size_t i = 0; i < vector_size(cs->shapes); i++)
+            if (dragged_shape)
+                SDL_SetCursor(cursor_hand);
+            else if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                IShape* shape = vector_get(cs->shapes, i);
-                if (shape->overlap_point(cs, shape, vector2_from_point(input_get_mouse_position())))
+                for (size_t i = 0; i < vector_size(cs->shapes); i++)
                 {
-                    SDL_SetCursor(cursor_hand);
-                    break;
+                    IShape* shape = vector_get(cs->shapes, i);
+                    if (shape->overlap_point(cs, shape, vector2_from_point(input_get_mouse_position())))
+                    {
+                        SDL_SetCursor(cursor_hand);
+                        break;
+                    }
                 }
             }
         }
