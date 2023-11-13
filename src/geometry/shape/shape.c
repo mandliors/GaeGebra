@@ -9,6 +9,10 @@ static void _point_draw(CoordinateSystem* cs, IShape* self);
 static void _line_draw(CoordinateSystem* cs, IShape* self);
 static void _circle_draw(CoordinateSystem* cs, IShape* self);
 
+static void _point_draw_selected(CoordinateSystem* cs, IShape* self);
+static void _line_draw_selected(CoordinateSystem* cs, IShape* self);
+static void _circle_draw_selected(CoordinateSystem* cs, IShape* self);
+
 static void _point_translate(CoordinateSystem* cs, IShape* self, Vector2 translation);
 static void _line_translate(CoordinateSystem* cs, IShape* self, Vector2 translation);
 static void _circle_translate(CoordinateSystem* cs, IShape* self, Vector2 translation);
@@ -31,6 +35,7 @@ Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
 {
     Point* point = malloc(sizeof(Point));
     point->base.draw = _point_draw;
+    point->base.draw_selected = _point_draw_selected;
     point->base.translate = _point_translate;
     point->base.destroy = _point_destroy;
     point->base.overlap_point = _point_overlap;
@@ -43,6 +48,7 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
 {
     Line* line = malloc(sizeof(Line));
     line->base.draw = _line_draw;
+    line->base.draw_selected = _line_draw_selected;
     line->base.translate = _line_translate;
     line->base.destroy = _line_destroy;
     line->base.overlap_point = _line_overlap;
@@ -56,6 +62,7 @@ Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_poin
 {
     Circle* circle = malloc(sizeof(Circle));
     circle->base.draw = _circle_draw;
+    circle->base.draw_selected = _circle_draw_selected;
     circle->base.translate = _circle_translate;
     circle->base.destroy = _circle_destroy;
     circle->base.overlap_point = _circle_overlap;
@@ -110,6 +117,32 @@ static void _circle_draw(CoordinateSystem* cs, IShape* self)
     double radius = vector2_distance(position, coordinates_to_screen(cs, circle->perimeter_point->coordinates));
     for (size_t r = radius - 1; r < radius + 2; r++)
         renderer_draw_circle(position.x, position.y, r, BLACK);
+}
+
+static void _point_draw_selected(CoordinateSystem* cs, IShape* self)
+{
+    Point* point = (Point*)self;
+    Vector2 position = coordinates_to_screen(cs, point->coordinates);
+    renderer_draw_filled_circle(position.x, position.y, 9, color_fade(BLACK, 0.3));
+}
+static void _line_draw_selected(CoordinateSystem* cs, IShape* self)
+{
+    Line* line = (Line*)self;
+    Vector2 p1 = coordinates_to_screen(cs, line->p1->coordinates);
+    Vector2 p2 = coordinates_to_screen(cs, line->p2->coordinates);
+    Vector2 dir = vector2_normalize(vector2_subtract(p2, p1));
+    double scale = fmax(cs->position.x + cs->size.x, cs->position.y + cs->size.y);
+    Vector2 p1_translated = vector2_add(p1, vector2_scale(dir, -scale));
+    Vector2 p2_translated = vector2_add(p2, vector2_scale(dir,  scale));
+    renderer_draw_line(p1_translated.x, p1_translated.y, p2_translated.x, p2_translated.y, 6, color_fade(BLACK, 0.3));
+}
+static void _circle_draw_selected(CoordinateSystem* cs, IShape* self)
+{
+    Circle* circle = (Circle*)self;
+    Vector2 position = coordinates_to_screen(cs, circle->center->coordinates);
+    double radius = vector2_distance(position, coordinates_to_screen(cs, circle->perimeter_point->coordinates));
+    for (size_t r = radius - 3; r < radius + 4; r++)
+        renderer_draw_circle(position.x, position.y, r, color_fade(BLACK, 0.3));
 }
 
 static void _point_translate(CoordinateSystem* cs, IShape* self, Vector2 translation)

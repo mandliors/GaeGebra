@@ -11,6 +11,7 @@ typedef struct IShape IShape;
 typedef struct IShape
 {
     void (*draw)(CoordinateSystem* cs, IShape* self);
+    void (*draw_selected)(CoordinateSystem* cs, IShape* self);
     void (*translate)(CoordinateSystem* cs, IShape* self, Vector2 translation);
     void (*destroy)(CoordinateSystem* cs, IShape* self);
     bool (*overlap_point)(CoordinateSystem* cs, IShape* self, Vector2 point);

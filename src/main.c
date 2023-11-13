@@ -8,8 +8,21 @@
  * @copyright Copyright (c) 2023
  */
 
-#include "includes.h"
+#include "app/app.h"
+#include "color/color.h"
+#include "font/font.h"
+#include "geometry/coordinate_system/coordinate_system.h"
+#include "geometry/shape/shape.h"
+#include "geometry/vector2/vector2.h"
+#include "input/input.h"
+#include "renderer/renderer.h"
+#include "texture/texture.h"
+#include "ui/ui.h"
+#include "ui/ui_constraint/ui_constraint.h"
+#include "ui/ui_element/ui_element.h"
+#include "utils/math/math.h"
 #include "utils/vector/vector.h"
+#include "window/window.h"
 
 #define FPS 60
 #define MOUSE_WHEEL_SENSITIVITY 5
@@ -24,7 +37,7 @@ void on_editmenu_clicked(UISplitButton* self, Sint32 index);
 void on_canvas_size_changed(UIContainer* self, SDL_Point size);
 
 //TODO: vector should be stack allocated + negative indices
-//    shapes should have indices to the defining points
+//      shapes should have indices to the defining points
 
 typedef enum State
 {
@@ -107,8 +120,12 @@ int main(void)
                     selected_shape = hovered_shape;
                     dragged_shape = hovered_shape;
                 }
-                else if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
-                    state = STATE_CS_DRAGGED;
+                else
+                {
+                    if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+                        state = STATE_CS_DRAGGED;
+                    selected_shape = NULL;
+                }
             }
             else if (selected_shape != NULL && input_is_key_released(SDL_SCANCODE_DELETE))
             {
@@ -167,8 +184,9 @@ int main(void)
                 //IShape* point = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
                 //selected_shape = (IShape*)circle_create(cs, (Point*)selected_shape, vector2_distance(coordinates_to_screen(cs,
                 //                ((Point*)selected_shape)->coordinates), coordinates_to_screen(cs, ((Point*)point)->coordinates)) / cs->zoom);
-                
-                selected_shape = (IShape*)circle_create(cs, (Point*)selected_shape, (Point*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position()))));
+                Point* point = (Point*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                circle_create(cs, (Point*)selected_shape, point);
+                selected_shape = (IShape*)point;
                 dragged_shape = selected_shape;
                 state = STATE_CIRCLE;
             }
@@ -195,6 +213,8 @@ int main(void)
         app_set_target(window);
         renderer_clear(WHITE);
         coordinate_system_draw(cs);
+        if (selected_shape)
+            selected_shape->draw_selected(cs, selected_shape);
         
         //fps (temporary)
         static char buffer[10];
