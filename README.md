@@ -12,16 +12,18 @@ There are some other 'methods' that you can use:
 - `coordinate_system_translate`
 - `coordinate_system_zoom`
 - `coordinate_system_update_dimensions`
+
 Sometimes, converting points from screen space into coordinate system space can be useful and vica versa.
 This can be achieved with the following functions:
-- screen_to_coordinates
-- coordinates_to_screen
+- `screen_to_coordinates`
+- `coordinates_to_screen`
 ## Shapes
 The are a number of shapes that can be created:
 - Point
 - Line
 - Circle
-To create a one, call `\[SHAPE\]_create` with the name of the shape.
+
+To create a one, call `[SHAPE]_create` with the name of the shape.
 The shape will be automatically freed in the end by the parent coordinate system.
 # API
 ## Project structure
@@ -34,6 +36,7 @@ The project is broken down into modules, and the SDL code is *completely* abstra
 - Texture
 - Font
 - Color
+
 The most important ones are presented here:
 ![Project structure](/docs/project_structure.png)
 # GUI
@@ -51,6 +54,7 @@ There are a number of UI elements supported by the library:
 - Slider
 - SplitButton
 - DropdownList
+
 ![UI Elements](/docs/ui_elements.png)
 The API is designed in such a way, that it is as easy as possible to create a simple, but fully functional GUI.
 To define an element, I chose to use a constraints system:
