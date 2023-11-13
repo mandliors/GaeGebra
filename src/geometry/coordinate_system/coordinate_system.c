@@ -15,6 +15,7 @@ CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vecto
     cs->size = size;
     cs->origin = origin;
     cs->zoom = INITIAL_ZOOM;
+    cs->points = vector_create(0);
     cs->shapes = vector_create(0);
     return cs;
 }
@@ -27,6 +28,12 @@ void coordinate_system_destroy(CoordinateSystem* cs)
         IShape* shape = vector_get(cs->shapes, 0);
         shape->destroy(cs, shape);
     }
+    while (vector_size(cs->points) > 0)
+    {
+        IShape* point = vector_get(cs->points, 0);
+        point->destroy(cs, point);
+    }
+    vector_free(cs->points);
     vector_free(cs->shapes);
     free(cs);
 }
@@ -58,6 +65,12 @@ IShape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
 {
     if (cs == NULL || !coordinate_system_is_hovered(cs, point))
         return NULL;
+    for (size_t i = 0; i < vector_size(cs->points); i++)
+    {
+        IShape* pnt = vector_get(cs->points, i);
+        if (pnt->overlap_point(cs, pnt, point))
+            return pnt;
+    }   
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
         IShape* shape = vector_get(cs->shapes, i);
@@ -123,10 +136,15 @@ void coordinate_system_draw(CoordinateSystem* cs)
     renderer_draw_line(x, cs->position.y - 10, x, cs->position.y + cs->size.y + 10, 1, BLACK);
     renderer_draw_line(cs->position.x - 10, y, cs->position.x + cs->size.x + 10, y, 1, BLACK);
 
-    for (size_t i = vector_size(cs->shapes); i >= 1; i--)
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
-        IShape* shape = vector_get(cs->shapes, i - 1);
+        IShape* shape = vector_get(cs->shapes, i);
         shape->draw(cs, shape);
+    }
+    for (size_t i = 0; i < vector_size(cs->points); i++)
+    {
+        IShape* point = vector_get(cs->points, i);
+        point->draw(cs, point);
     }
 }
 

@@ -29,6 +29,7 @@ static bool _point_is_defined_by(IShape* self, IShape* shape);
 static bool _line_is_defined_by(IShape* self, IShape* shape);
 static bool _circle_is_defined_by(IShape* self, IShape* shape);
 
+static void _coordinate_system_remove_point(CoordinateSystem* cs, IShape* point);
 static void _coordinate_system_remove_shape(CoordinateSystem* cs, IShape* shape);
 
 Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
@@ -41,7 +42,7 @@ Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
     point->base.overlap_point = _point_overlap;
     point->base.is_defined_by = _point_is_defined_by;
     point->coordinates = coordinates;
-    vector_push_back(cs->shapes, point);
+    vector_push_back(cs->points, point);
     return point;
 }
 Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
@@ -75,21 +76,18 @@ Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_poin
 
 static void _point_destroy(CoordinateSystem* cs, IShape* self)
 {
-    _coordinate_system_remove_shape(cs, self);
+    _coordinate_system_remove_point(cs, self);
     free((Point*)self);
-    self = NULL;
 }
 static void _line_destroy(CoordinateSystem* cs, IShape* self)
 {
     _coordinate_system_remove_shape(cs, self);
     free((Line*)self);
-    self = NULL;
 }
 static void _circle_destroy(CoordinateSystem* cs, IShape* self)
 {
     _coordinate_system_remove_shape(cs, self);
     free((Circle*)self);
-    self = NULL;
 }
 
 static void _point_draw(CoordinateSystem* cs, IShape* self)
@@ -197,13 +195,26 @@ static bool _circle_is_defined_by(IShape* self, IShape* shape)
     return (IShape*)((Circle*)self)->center == shape || (IShape*)((Circle*)self)->perimeter_point == shape;
 }
 
+static void _coordinate_system_remove_point(CoordinateSystem* cs, IShape* point)
+{
+    vector_remove(cs->points, point);
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        IShape* shp = vector_get(cs->shapes, i);
+        if (shp->is_defined_by(shp, point))
+        {
+            shp->destroy(cs, shp);
+            i--;
+        }
+    }
+}
 static void _coordinate_system_remove_shape(CoordinateSystem* cs, IShape* shape)
 {
     vector_remove(cs->shapes, shape);
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
         IShape* shp = vector_get(cs->shapes, i);
-        if (shp->is_defined_by(shp, (IShape*)shape))
+        if (shp->is_defined_by(shp, shape))
         {
             shp->destroy(cs, shp);
             i--;

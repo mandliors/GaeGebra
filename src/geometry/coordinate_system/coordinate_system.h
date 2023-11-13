@@ -14,6 +14,7 @@ typedef struct CoordinateSystem
     Vector2 origin;
     double zoom;
 
+    Vector* points;
     Vector* shapes;
 } CoordinateSystem;
 

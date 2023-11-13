@@ -36,8 +36,10 @@ void on_filemenu_clicked(UISplitButton* self, Sint32 index);
 void on_editmenu_clicked(UISplitButton* self, Sint32 index);
 void on_canvas_size_changed(UIContainer* self, SDL_Point size);
 
-//TODO: vector should be stack allocated + negative indices
-//      shapes should have indices to the defining points
+/* TODO: seperate vector for the points, and the other shapes
+         first check points, but render the other shapes first
+         shapes should have indices to the defining points?
+*/
 
 typedef enum State
 {
@@ -219,20 +221,10 @@ int main(void)
         else
         {
             SDL_SetCursor(cursor_default);
-            if (dragged_shape)
+            if (dragged_shape || state == STATE_CS_DRAGGED)
                 SDL_SetCursor(cursor_hand);
-            else if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
-            {
-                for (size_t i = 0; i < vector_size(cs->shapes); i++)
-                {
-                    IShape* shape = vector_get(cs->shapes, i);
-                    if (shape->overlap_point(cs, shape, vector2_from_point(input_get_mouse_position())))
-                    {
-                        SDL_SetCursor(cursor_hand);
-                        break;
-                    }
-                }
-            }
+            else if (coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position())) != NULL)
+                SDL_SetCursor(cursor_hand);
         }
         coordinate_system_zoom(cs, 1.0 + input_get_mouse_wheel_delta() / 100.0 * MOUSE_WHEEL_SENSITIVITY);
         
