@@ -5,8 +5,6 @@
 SDL_Renderer* target_renderer;
 Font* default_font;
 
-static void _renderer_draw_line(int x1, int y1, int x2, int y2, Color color);
-
 void renderer_set_default_font(Font* font)
 {
 	default_font = font;
@@ -67,28 +65,29 @@ void renderer_draw_line(int x1, int y1, int x2, int y2, int thickness, Color col
 {
 	if (thickness == 1)
 	{
-		_renderer_draw_line(x1, y1, x2, y2, color);
+		aalineRGBA(target_renderer, x1, y1, x2, y2, color.r, color.g, color.b, color.a);
 		return;
 	}
 
-    float dx = x2 - x1;
-    float dy = y2 - y1;
-    float length = sqrt(dx * dx + dy * dy);
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+    double length = sqrt(dx * dx + dy * dy);
     if (length > 0.0)
 	{
         dx /= length;
         dy /= length;
     }
-    float ox = thickness * 0.5 * dy;
-    float oy = thickness * 0.5 * (-dx);
+    double ox = thickness * 0.5 * dy;
+    double oy = thickness * 0.5 * (-dx);
 
-    float x1a = x1 + ox; float x2a = x2 + ox;
-    float y1a = y1 + oy; float y2a = y2 + oy;
-    float x1b = x1 - ox; float x2b = x2 - ox;
-    float y1b = y1 - oy; float y2b = y2 - oy;
+    double x1a = x1 + ox; double x2a = x2 + ox;
+    double y1a = y1 + oy; double y2a = y2 + oy;
+    double x1b = x1 - ox; double x2b = x2 - ox;
+    double y1b = y1 - oy; double y2b = y2 - oy;
 
-	aatrigonRGBA(target_renderer, x1a, y1a, x2a, y2a, x2b, y2b, color.r, color.g, color.b, color.a);
-	aatrigonRGBA(target_renderer, x1a, y1a, x2b, y2b, x1b, y1b, color.r, color.g, color.b, color.a);
+	aalineRGBA(target_renderer, x1a, y1a, x2a, y2a, color.r, color.g, color.b, color.a);
+	aalineRGBA(target_renderer, x1b, y1b, x2b, y2b, color.r, color.g, color.b, color.a);
+	filledPolygonRGBA(target_renderer, (const short[]){ x1a, x2a, x2b, x1b }, (const short[]){ y1a, y2a, y2b, y1b }, 4, color.r, color.g, color.b, color.a);
 }
 void renderer_draw_rect(int x, int y, int width, int height, Color color)
 {
@@ -104,6 +103,7 @@ void renderer_draw_circle(int x, int y, int radius, Color color)
 }
 void renderer_draw_filled_circle(int x, int y, int radius, Color color)
 {
+	aacircleRGBA(target_renderer, x, y, radius, color.r, color.g, color.b, color.a);
 	filledCircleRGBA(target_renderer, x, y, radius, color.r, color.g, color.b, color.a);
 }
 void renderer_draw_ellipse(int x, int y, int rx, int ry, Color color)
@@ -182,8 +182,4 @@ SDL_Point renderer_query_text_size(const char* text)
 void _renderer_set_target(SDL_Renderer* renderer)
 {
 	target_renderer = renderer;
-}
-static void _renderer_draw_line(int x1, int y1, int x2, int y2, Color color)
-{
-	aalineRGBA(target_renderer, x1, y1, x2, y2, color.r, color.g, color.b, color.a);
 }

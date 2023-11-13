@@ -115,7 +115,7 @@ static void _circle_draw(CoordinateSystem* cs, IShape* self)
     Circle* circle = (Circle*)self;
     Vector2 position = coordinates_to_screen(cs, circle->center->coordinates);
     double radius = vector2_distance(position, coordinates_to_screen(cs, circle->perimeter_point->coordinates));
-    for (size_t r = radius - 1; r < radius + 2; r++)
+    for (size_t r = radius; r < radius + 2; r++)
         renderer_draw_circle(position.x, position.y, r, BLACK);
 }
 
@@ -141,7 +141,7 @@ static void _circle_draw_selected(CoordinateSystem* cs, IShape* self)
     Circle* circle = (Circle*)self;
     Vector2 position = coordinates_to_screen(cs, circle->center->coordinates);
     double radius = vector2_distance(position, coordinates_to_screen(cs, circle->perimeter_point->coordinates));
-    for (size_t r = radius - 3; r < radius + 4; r++)
+    for (size_t r = radius - 2; r < radius + 4; r++)
         renderer_draw_circle(position.x, position.y, r, color_fade(BLACK, 0.3));
 }
 
