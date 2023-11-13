@@ -1,16 +1,17 @@
-# Short documentation
-A coordinate geometry application inspired by GeoGebra. Written in C99 using SDL2.
+# Documentation
+GaeGebra is a coordinate geometry application inspired by GeoGebra. Written in C99 using SDL2.
+Here is a short documentation, but if you want to dive deeper into the source code, you can find a pdf in the docs folder that contains a short description about the functions and structures.
 # Coordinate geomertry
 ## Coordinaty system
 The first step is to create a coordinate system with `coordinate_system_create`.
 Then you can add shapes to it that will be stored and freed in the end.
 You need to call `coordinate_system_draw` to draw it, and call `coordinate_system_destroy` in the end to clean up.
 There are some other 'methods' that you can use:
-- coordinate_system_is_hovered
-- coordinate_system_get_hovered_shape
-- coordinate_system_translate
-- coordinate_system_zoom
-- coordinate_system_update_dimensions
+- `coordinate_system_is_hovered`
+- `coordinate_system_get_hovered_shape`
+- `coordinate_system_translate`
+- `coordinate_system_zoom`
+- `coordinate_system_update_dimensions`
 Sometimes, converting points from screen space into coordinate system space can be useful and vica versa.
 This can be achieved with the following functions:
 - screen_to_coordinates
