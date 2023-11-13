@@ -38,11 +38,11 @@ The project is broken down into modules, and the SDL code is *completely* abstra
 - Color
 
 The most important ones are presented here:
-![Project structure](/docs/project_structure.png)
+![Project structure](/docs/images/project_structure.png)
 # GUI
 Obviously, a coordinate geometry app would be nothing without a GUI! So I wrote a library that allows you to create basic UI elements easily.
 The UI is responsive, everything is updated automatically. To make use of responsiveness, you need to use `Containers`:
-![Containers](/docs/containers.png)
+![Containers](/docs/images/containers.png)
 # UI Elements
 There are a number of UI elements supported by the library:
 - Button
@@ -55,10 +55,10 @@ There are a number of UI elements supported by the library:
 - SplitButton
 - DropdownList
 
-![UI Elements](/docs/ui_elements.png)
+![UI Elements](/docs/images/ui_elements.png)
 The API is designed in such a way, that it is as easy as possible to create a simple, but fully functional GUI.
 To define an element, I chose to use a constraints system:
-![Constraints System](/docs/constraints_system.png)
+![Constraints System](/docs/images/constraints_system.png)
 # How to use
 To download the app, execute the following commands:
 ```
