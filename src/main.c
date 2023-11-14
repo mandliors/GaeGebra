@@ -36,8 +36,9 @@ void on_filemenu_clicked(UISplitButton* self, Sint32 index);
 void on_editmenu_clicked(UISplitButton* self, Sint32 index);
 void on_canvas_size_changed(UIContainer* self, SDL_Point size);
 
-/* TODO: seperate vector for the points, and the other shapes
-         first check points, but render the other shapes first
+/* TODO: add shape type, put points back to the shapes vector
+         add selected bool to shapes
+         check intersection between shapes, add multiple types of points (intersections)
          shapes should have indices to the defining points?
 */
 
@@ -94,8 +95,7 @@ int main(void)
     line_create(cs, point_create(cs, vector2_create(-10, 10)), point_create(cs, vector2_create(-2, 2)));
     circle_create(cs, point_create(cs, vector2_create(2, 1)), point_create(cs, vector2_create(5, 1)));
 
-    IShape* selected_shape = NULL;
-    IShape* dragged_shape = NULL;
+    Shape* dragged_shape = NULL;
     Point* placing_point = NULL;
 
     while (!window->close_requested)
@@ -108,31 +108,29 @@ int main(void)
             if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
                 dragged_shape = NULL;
             else
-                selected_shape->translate(cs, selected_shape, vector2_from_point(input_get_mouse_motion()));
+                dragged_shape->translate(cs, dragged_shape, vector2_from_point(input_get_mouse_motion()));
         }
         switch (state)
         {
         case STATE_POINTER:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             {
-                IShape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
                 if (hovered_shape != NULL)
                 {
-                    selected_shape = hovered_shape;
                     dragged_shape = hovered_shape;
+                    coordinate_system_deselect_shapes(cs);
+                    hovered_shape->selected = true;
                 }
                 else
                 {
                     if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
                         state = STATE_CS_DRAGGED;
-                    selected_shape = NULL;
+                    coordinate_system_deselect_shapes(cs);
                 }
             }
-            else if (selected_shape != NULL && input_is_key_released(SDL_SCANCODE_DELETE))
-            {
-                selected_shape->destroy(cs, selected_shape);
-                selected_shape = NULL;
-            }
+            else if (input_is_key_released(SDL_SCANCODE_DELETE))
+                coordinate_system_delete_selected_shapes(cs);
             break;
         case STATE_CS_DRAGGED:
             if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
@@ -144,20 +142,23 @@ int main(void)
         case STATE_POINT:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                IShape* point = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                selected_shape = point;
-                dragged_shape = selected_shape;
+                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                dragged_shape = point;
+                coordinate_system_deselect_shapes(cs);
+                point->selected = true;
             }
             break;
         
         case STATE_LINE:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                selected_shape = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                coordinate_system_deselect_shapes(cs);
+                point->selected = true;
                 placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
                 vector_pop_back(cs->shapes);
-                line_create(cs, (Point*)selected_shape, (Point*)placing_point);
-                dragged_shape = selected_shape;
+                line_create(cs, (Point*)point, (Point*)placing_point);
+                dragged_shape = point;
                 state = STATE_LINE_POINT1_PLACED;
             }
             break;
@@ -165,17 +166,18 @@ int main(void)
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
                 vector_push_back(cs->shapes, placing_point);
-                selected_shape = (IShape*)placing_point;
-                dragged_shape = selected_shape;
+                coordinate_system_deselect_shapes(cs);
+                ((Shape*)placing_point)->selected = true;
+                dragged_shape = (Shape*)placing_point;
                 placing_point = NULL;
                 state = STATE_LINE; 
             }
             else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
             {
                 vector_pop_back(cs->shapes);
-                placing_point->base.destroy(cs, (IShape*)placing_point);
+                placing_point->base.destroy(cs, (Shape*)placing_point);
                 placing_point = NULL;
-                selected_shape = NULL;
+                coordinate_system_deselect_shapes(cs);
                 state = STATE_LINE;
             }
             break;
@@ -183,32 +185,35 @@ int main(void)
         case STATE_CIRCLE:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                selected_shape = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));;
+                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));;
+                coordinate_system_deselect_shapes(cs);
+                point->selected = true;
                 placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
                 vector_pop_back(cs->shapes);
-                circle_create(cs, (Point*)selected_shape, placing_point);
-                dragged_shape = selected_shape;
+                circle_create(cs, (Point*)point, placing_point);
+                dragged_shape = point;
                 state = STATE_CIRCLE_CENTER_PLACED;
             }
             break;
         case STATE_CIRCLE_CENTER_PLACED:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                //IShape* point = (IShape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                //selected_shape = (IShape*)circle_create(cs, (Point*)selected_shape, vector2_distance(coordinates_to_screen(cs,
+                //Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                //selected_shape = (Shape*)circle_create(cs, (Point*)selected_shape, vector2_distance(coordinates_to_screen(cs,
                 //                ((Point*)selected_shape)->coordinates), coordinates_to_screen(cs, ((Point*)point)->coordinates)) / cs->zoom);
                 vector_push_back(cs->shapes, placing_point);
-                selected_shape = (IShape*)placing_point;
-                dragged_shape = selected_shape;
+                coordinate_system_deselect_shapes(cs);
+                ((Shape*)placing_point)->selected = true;
+                dragged_shape = (Shape*)placing_point;
                 placing_point = NULL;
                 state = STATE_CIRCLE;
             }
             else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
             {
                 vector_pop_back(cs->shapes);
-                placing_point->base.destroy(cs, (IShape*)placing_point);
+                placing_point->base.destroy(cs, (Shape*)placing_point);
                 placing_point = NULL;
-                selected_shape = NULL;
+                coordinate_system_deselect_shapes(cs);
                 state = STATE_CIRCLE;
             }
             break;
@@ -216,7 +221,7 @@ int main(void)
         if (placing_point)
         {
             placing_point->coordinates = screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position()));
-            placing_point->base.draw(cs, (IShape*)placing_point);
+            placing_point->base.draw(cs, (Shape*)placing_point);
         }
         else
         {
@@ -232,8 +237,6 @@ int main(void)
         app_set_target(window);
         renderer_clear(WHITE);
         coordinate_system_draw(cs);
-        if (selected_shape)
-            selected_shape->draw_selected(cs, selected_shape);
         
         //fps (temporary)
         static char buffer[10];

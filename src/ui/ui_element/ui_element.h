@@ -16,6 +16,11 @@
 #define UITEXT_MAX_LENGTH 50
 
 typedef struct UIElement UIElement;
+typedef void (*UIElementUpdate)(UIElement* self);
+typedef void (*UIElementRecalculate)(UIElement* sibling, UIElement* self);
+typedef void (*UIElementRender)(UIElement* self);
+typedef void (*UIElementDestroy)(UIElement* self);
+
 typedef struct UIElement
 {
 	UIElement* parent;
@@ -23,19 +28,21 @@ typedef struct UIElement
 	SDL_Point position;
 	SDL_Point size;
 
-	void (*update)(UIElement* self);
-	void (*recalculate)(UIElement* sibling, UIElement* self);
-	void (*render)(UIElement* self);
-	void (*destroy)(UIElement* self);
+	UIElementUpdate update;
+	UIElementRecalculate recalculate;
+	UIElementRender render;
+	UIElementDestroy destroy;
 } UIElement;
 
 typedef struct UIContainer UIContainer;
+typedef void (*UIContainerSizeChanged)(UIContainer* self, SDL_Point size);
+
 typedef struct UIContainer
 {
 	UIElement base;
 
 	Vector* children;
-	void (*on_size_changed)(UIContainer* self, SDL_Point size);
+	UIContainerSizeChanged on_size_changed;
 } UIContainer;
 
 typedef struct UIPanel
@@ -58,6 +65,8 @@ typedef struct UILabel
 
 typedef enum MouseState { MS_NONE = 0, MS_HOVER, MS_PRESS } MouseState;
 typedef struct UIButton UIButton;
+typedef void (*UIButtonClick)(UIButton* self);
+
 typedef struct UIButton
 {
 	UIElement base;
@@ -68,20 +77,24 @@ typedef struct UIButton
 	Color text_color;
 	Uint32 corner_radius;
 	MouseState mouse_state;
-	void (*on_click)(UIButton* self);
+	UIButtonClick on_click;
 } UIButton;
 
 typedef struct UIImageButton UIImageButton;
+typedef void (*UIImageButtonClick)(UIImageButton* self);
+
 typedef struct UIImageButton
 {
 	UIElement base;
 
 	Texture* texture;
 	MouseState mouse_state;
-	void (*on_click)(UIImageButton* self);
+	UIImageButtonClick on_click;
 } UIImageButton;
 
 typedef struct UITextbox UITextbox;
+typedef void (*UITextboxTextChanged)(UITextbox* self, const char* text);
+
 typedef struct UITextbox
 {
 	UIElement base;
@@ -92,10 +105,12 @@ typedef struct UITextbox
 	Uint32 corner_radius;
 	bool focused;
 	MouseState mouse_state;
-	void (*on_text_changed)(UITextbox* self, const char* text);
+	UITextboxTextChanged on_text_changed;
 } UITextbox;
 
 typedef struct UICheckbox UICheckbox;
+typedef void (*UICheckboxCheckedChanged)(UICheckbox* self, bool checked);
+
 typedef struct UICheckbox
 {
 	UIElement base;
@@ -105,10 +120,12 @@ typedef struct UICheckbox
 	Color unchecked_color;
 	Uint32 corner_radius;
 	MouseState mouse_state;
-	void (*on_checked_changed)(UICheckbox* self, bool checked);
+	UICheckboxCheckedChanged on_checked_changed;
 } UICheckbox;
 
 typedef struct UISlider UISlider; 
+typedef void (*UISliderValueChanged)(UISlider* self, double value);
+
 typedef struct UISlider
 {
 	UIElement base;
@@ -119,10 +136,12 @@ typedef struct UISlider
 	Uint32 thickness;
 	Uint32 corner_radius;
 	MouseState mouse_state;
-	void (*on_value_changed)(UISlider* self, double value);
+	UISliderValueChanged on_value_changed;
 } UISlider;
 
 typedef struct UIDropdownList UIDropdownList;
+typedef void (*UIDropdownListSelectionChanged)(UIDropdownList* self, Sint32 index);
+
 typedef struct UIDropdownList
 {
 	UIElement base;
@@ -133,10 +152,12 @@ typedef struct UIDropdownList
 	Color color;
 	Color text_color;
 	Uint32 corner_radius;
-	void (*on_selection_changed)(UIDropdownList* self, Sint32 index);
+	UIDropdownListSelectionChanged on_selection_changed;
 } UIDropdownList;
 
 typedef struct UISplitButton UISplitButton;
+typedef void (*UISplitButtonClicked)(UISplitButton* self, Sint32 index);
+
 typedef struct UISplitButton
 {
 	UIElement base;
@@ -146,7 +167,7 @@ typedef struct UISplitButton
 	Color color;
 	Color text_color;
 	Uint32 corner_radius;
-	void (*on_item_clicked)(UISplitButton* self, Sint32 index);
+	UISplitButtonClicked on_item_clicked;
 	bool auto_dropdown;
 } UISplitButton;
 

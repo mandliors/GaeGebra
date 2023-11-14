@@ -14,7 +14,6 @@ typedef struct CoordinateSystem
     Vector2 origin;
     double zoom;
 
-    Vector* points;
     Vector* shapes;
 } CoordinateSystem;
 
@@ -63,10 +62,21 @@ bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point);
  * 
  * @param cs The coordinate system to check
  * @param point The point to check
- * @return IShape* The hovered shape (NULL if none)
+ * @return Shape* The hovered shape (NULL if none)
  */
-IShape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point);
-
+Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point);
+/**
+ * @brief Deselects all the selected shapes
+ * 
+ * @param cs The coordinate system to deselect the shapes in
+ */
+void coordinate_system_deselect_shapes(CoordinateSystem* cs);
+/**
+ * @brief Deletes all the selected shapes
+ * 
+ * @param cs The coordinate system to delete the shapes in
+*/
+void coordinate_system_delete_selected_shapes(CoordinateSystem* cs);
 /**
  * @brief Translates the coordinate system
  * 

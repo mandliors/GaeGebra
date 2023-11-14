@@ -7,32 +7,48 @@
 #define OVERLAP_DISTANCE 5
 
 typedef struct CoordinateSystem CoordinateSystem;
-typedef struct IShape IShape;
-typedef struct IShape
+typedef struct Shape Shape;
+
+typedef void (*ShapeDraw)(struct CoordinateSystem* cs, struct Shape* self);
+typedef void (*ShapeTranslate)(struct CoordinateSystem* cs, struct Shape* self, Vector2 translation);
+typedef void (*ShapeDestroy)(struct CoordinateSystem* cs, struct Shape* self);
+typedef bool (*ShapeOverlapPoint)(struct CoordinateSystem* cs, struct Shape* self, Vector2 point);
+typedef bool (*ShapeIsDefinedBy)(struct Shape* self, struct Shape* shape);
+
+typedef enum ShapeType
 {
-    void (*draw)(CoordinateSystem* cs, IShape* self);
-    void (*draw_selected)(CoordinateSystem* cs, IShape* self);
-    void (*translate)(CoordinateSystem* cs, IShape* self, Vector2 translation);
-    void (*destroy)(CoordinateSystem* cs, IShape* self);
-    bool (*overlap_point)(CoordinateSystem* cs, IShape* self, Vector2 point);
-    bool (*is_defined_by)(IShape* self, IShape* shape);
-} IShape;
+    ST_POINT,
+    ST_LINE,
+    ST_CIRCLE
+} ShapeType;
+
+typedef struct Shape
+{
+    bool selected;
+    ShapeType type;
+
+    ShapeDraw draw;
+    ShapeTranslate translate;
+    ShapeDestroy destroy;
+    ShapeOverlapPoint overlap_point;
+    ShapeIsDefinedBy is_defined_by;
+} Shape;
 
 typedef struct Point
 {
-    IShape base;
+    Shape base;
     Vector2 coordinates;
 } Point;
 
 typedef struct Line
 {
-    IShape base;
+    Shape base;
     Point *p1, *p2;
 } Line;
 
 typedef struct Circle
 {
-    IShape base;
+    Shape base;
     Point* center;
     Point* perimeter_point;
 } Circle;

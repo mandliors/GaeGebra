@@ -9,11 +9,11 @@ typedef enum ConstraintType
     CT_ASPECT
 } ConstraintType;
 
+typedef struct UIConstraint UIConstraint;
 typedef struct UIConstraint
 {
     double value;
     ConstraintType constraint_type;
-    void (*recalculate)(void* self);
 } UIConstraint;
 
 typedef struct UIConstraints
