@@ -19,19 +19,14 @@ typedef enum ShapeType
 {
     ST_POINT,
     ST_LINE,
-    ST_CIRCLE
+    ST_CIRCLE,
+    ST_COUNT
 } ShapeType;
 
 typedef struct Shape
 {
-    bool selected;
     ShapeType type;
-
-    ShapeDraw draw;
-    ShapeTranslate translate;
-    ShapeDestroy destroy;
-    ShapeOverlapPoint overlap_point;
-    ShapeIsDefinedBy is_defined_by;
+    bool selected;
 } Shape;
 
 typedef struct Point
@@ -79,3 +74,10 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2);
  * @return Circle* The created circle
  */
 Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_point);
+
+void shape_draw(CoordinateSystem* cs, Shape* self);
+void shape_update(CoordinateSystem* cs, Shape* self);
+void shape_translate(CoordinateSystem* cs, Shape* self, Vector2 translation);
+void shape_destroy(CoordinateSystem* cs, Shape* self);
+bool shape_overlap_point(CoordinateSystem* cs, Shape* self, Vector2 point);
+bool shape_is_defined_by(Shape* self, Shape* shape);

@@ -58,11 +58,12 @@ void vector_push_back(Vector* vector, void* value)
 	}
 	vector->data[vector->size++] = value;
 }
-void vector_pop_back(Vector* vector)
+void* vector_pop_back(Vector* vector)
 {
 	if (vector == NULL || vector->size == 0)
-		return;
+		return NULL;
 	vector->size--;
+	return vector->data[vector->size];
 }
 void vector_insert(Vector* vector, size_t idx, void* value)
 {

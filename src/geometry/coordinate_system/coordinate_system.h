@@ -15,6 +15,8 @@ typedef struct CoordinateSystem
     double zoom;
 
     Vector* shapes;
+    Vector* intersection_points;
+    Shape* dragged_shape;
 } CoordinateSystem;
 
 /**
@@ -56,7 +58,20 @@ Vector2 coordinates_to_screen(CoordinateSystem* cs, Vector2 point);
  * @param cs The coordinate system to check
  * @param point The point to check
  */
-bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point);
+bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point);/**
+ * @brief Selects a shape
+ * 
+ * @param cs The coordinate system to select the shape in
+ * @param shape The shape to select
+ */
+void coordinate_system_select_shape(CoordinateSystem* cs, Shape* shape);
+/**
+ * @brief Sets the dragged shape
+ * 
+ * @param cs The coordinate system to set the dragged shape in
+ * @param shape The shape to set as dragged
+ */
+void coordinate_system_set_dragged_shape(CoordinateSystem* cs, Shape* shape);
 /**
  * @brief Returns the shape hovered by the point
  * 
@@ -65,6 +80,20 @@ bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point);
  * @return Shape* The hovered shape (NULL if none)
  */
 Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point);
+/**
+ * @brief Returns the selected shapes
+ * 
+ * @param cs The coordinate system to retrieve to selected shapes from
+ * @return Vector* A vector of the selected shapes
+ */
+Vector* coordinate_system_get_selected_shapes(CoordinateSystem* cs);
+/**
+ * @brief Returns the dragged shape
+ * 
+ * @param cs The coordinate system to retrieve to dragged shape from
+ * @return Shape* The dragged shape
+ */
+Shape* coordinate_system_get_dragged_shape(CoordinateSystem* cs);
 /**
  * @brief Deselects all the selected shapes
  * 
@@ -92,6 +121,18 @@ void coordinate_system_translate(CoordinateSystem* cs, Vector2 translation);
  */
 void coordinate_system_zoom(CoordinateSystem* cs, double zoom);
 /**
+ * @brief Updates the coordinate system and calculates the intersections
+ * 
+ * @param cs The coordinate system to update
+ */
+void coordinate_system_update(CoordinateSystem* cs);
+/**
+ * @brief Draws the coordinate system
+ * 
+ * @param cs The coordinate system to draw
+ */
+void coordinate_system_draw(CoordinateSystem* cs);
+/**
  * @brief Updates the dimensions of the coordinate system
  * 
  * @param cs The coordinate system to update
@@ -100,8 +141,9 @@ void coordinate_system_zoom(CoordinateSystem* cs, double zoom);
  */
 void coordinate_system_update_dimensions(CoordinateSystem* cs, Vector2 position, Vector2 size);
 /**
- * @brief Draws the coordinate system
+ * @brief Destroys a shape and removes it from the coordinate system (as well as the shapes it defined)
  * 
- * @param cs The coordinate system to draw
+ * @param cs The coordinate system to remove the shape from
+ * @param shape The shape to remove
  */
-void coordinate_system_draw(CoordinateSystem* cs);
+void coordinate_system_destroy_shape(CoordinateSystem* cs, Shape* shape);

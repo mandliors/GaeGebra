@@ -1,6 +1,7 @@
 #include "coordinate_system.h"
 
 #include "../../renderer/renderer.h"
+#include "../intersection/intersection.h"
 #include "../../utils/math/math.h"
 
 static double _x_screen_to_coordinate(CoordinateSystem* cs, double x);
@@ -16,6 +17,8 @@ CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vecto
     cs->origin = origin;
     cs->zoom = INITIAL_ZOOM;
     cs->shapes = vector_create(0);
+    cs->intersection_points = vector_create(0);
+    cs->dragged_shape = NULL;
     return cs;
 }
 void coordinate_system_destroy(CoordinateSystem* cs)
@@ -25,9 +28,15 @@ void coordinate_system_destroy(CoordinateSystem* cs)
     while (vector_size(cs->shapes) > 0)
     {
         Shape* shape = vector_get(cs->shapes, 0);
-        shape->destroy(cs, shape);
+        coordinate_system_destroy_shape(cs, shape);
     }
     vector_free(cs->shapes);
+    for (size_t i = 0; i < vector_size(cs->intersection_points); i++)
+    {
+        Intersection* intersection = vector_get(cs->intersection_points, i);
+        intersection_destroy(intersection);
+    }
+    vector_free(cs->intersection_points);
     free(cs);
 }
 
@@ -54,6 +63,19 @@ bool coordinate_system_is_hovered(CoordinateSystem* cs, Vector2 point)
         return false;
     return check_collision_point_rect(point.x, point.y, cs->position.x, cs->position.y, cs->size.x, cs->size.y);
 }
+void coordinate_system_select_shape(CoordinateSystem* cs, Shape* shape)
+{
+    if (cs == NULL || shape == NULL)
+        return;
+    shape->selected = true;
+
+}
+void coordinate_system_set_dragged_shape(CoordinateSystem* cs, Shape* shape)
+{
+    if (cs == NULL)
+        return;
+    cs->dragged_shape = shape;
+}
 Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
 {
     if (cs == NULL || !coordinate_system_is_hovered(cs, point))
@@ -61,16 +83,31 @@ Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
         Shape* shape = vector_get(cs->shapes, i);
-        if (shape->type == ST_POINT && shape->overlap_point(cs, shape, point))
+        if (shape->type == ST_POINT && shape_overlap_point(cs, shape, point))
             return shape;
     }
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
         Shape* shape = vector_get(cs->shapes, i);
-        if (shape->type != ST_POINT && shape->overlap_point(cs, shape, point))
+        if (shape->type != ST_POINT && shape_overlap_point(cs, shape, point))
             return shape;
     }
     return NULL;
+}
+Vector* coordinate_system_get_selected_shapes(CoordinateSystem* cs)
+{
+    Vector* shapes = vector_create(0);
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        Shape* shape = vector_get(cs->shapes, i);
+        if (shape->selected)
+            vector_push_back(shapes, shape);
+    }
+    return shapes;
+}
+Shape* coordinate_system_get_dragged_shape(CoordinateSystem* cs)
+{
+    return cs->dragged_shape;
 }
 void coordinate_system_deselect_shapes(CoordinateSystem* cs)
 {
@@ -91,7 +128,7 @@ void coordinate_system_delete_selected_shapes(CoordinateSystem* cs)
     {
         Shape* shape = vector_get(cs->shapes, i);
         if (shape->selected)
-            shape->destroy(cs, shape);
+            coordinate_system_destroy_shape(cs, shape);
     }
 }
 void coordinate_system_translate(CoordinateSystem* cs, Vector2 translation)
@@ -107,12 +144,33 @@ void coordinate_system_zoom(CoordinateSystem* cs, double zoom)
         return;
     cs->zoom *= zoom;
 }
-void coordinate_system_update_dimensions(CoordinateSystem* cs, Vector2 position, Vector2 size)
+void coordinate_system_update(CoordinateSystem* cs)
 {
     if (cs == NULL)
         return;
-    cs->position = position;
-    cs->size = size;
+
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+        shape_update(cs, vector_get(cs->shapes, i));
+
+    for (size_t i = 0; i < vector_size(cs->intersection_points); i++)
+    {
+        Intersection* intersection = vector_get(cs->intersection_points, i);
+        intersection_destroy(intersection);
+    }
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        Shape* shape1 = vector_get(cs->shapes, i);
+        for (size_t j = i + 1; j < vector_size(cs->shapes); j++)
+        {
+            Shape* shape2 = vector_get(cs->shapes, j);
+            Intersection intersection = intersection_get(shape1, shape2);
+            if (intersection.points != NULL)
+            {
+                //ADD INTERSECTIONS
+                //vector_push_back(cs->intersection_points, );
+            }
+        }
+    }
 }
 void coordinate_system_draw(CoordinateSystem* cs)
 {
@@ -154,13 +212,35 @@ void coordinate_system_draw(CoordinateSystem* cs)
     {
         Shape* shape = vector_get(cs->shapes, i);
         if (shape->type != ST_POINT)
-            shape->draw(cs, shape);
+            shape_draw(cs, shape);
     }
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
         Shape* shape = vector_get(cs->shapes, i);
         if (shape->type == ST_POINT)
-            shape->draw(cs, shape);
+            shape_draw(cs, shape);
+    }
+}
+void coordinate_system_update_dimensions(CoordinateSystem* cs, Vector2 position, Vector2 size)
+{
+    if (cs == NULL)
+        return;
+    cs->position = position;
+    cs->size = size;
+}
+void coordinate_system_destroy_shape(CoordinateSystem* cs, Shape* shape)
+{
+    shape_destroy(cs, shape);
+    vector_remove(cs->shapes, shape);
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        Shape* shp = vector_get(cs->shapes, i);
+        if (shape_is_defined_by(shp, shape))
+        {
+            shape_destroy(cs, shp);
+            vector_remove(cs->shapes, shp);
+            i--;
+        }
     }
 }
 

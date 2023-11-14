@@ -95,40 +95,28 @@ int main(void)
     line_create(cs, point_create(cs, vector2_create(-10, 10)), point_create(cs, vector2_create(-2, 2)));
     circle_create(cs, point_create(cs, vector2_create(2, 1)), point_create(cs, vector2_create(5, 1)));
 
-    Shape* dragged_shape = NULL;
-    Point* placing_point = NULL;
-
     while (!window->close_requested)
     {
         //update
         app_update();
 
-        if (dragged_shape != NULL)
-        {
-            if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
-                dragged_shape = NULL;
-            else
-                dragged_shape->translate(cs, dragged_shape, vector2_from_point(input_get_mouse_motion()));
-        }
         switch (state)
         {
         case STATE_POINTER:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT))
             {
                 Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                coordinate_system_deselect_shapes(cs);
                 if (hovered_shape != NULL)
                 {
-                    dragged_shape = hovered_shape;
-                    coordinate_system_deselect_shapes(cs);
-                    hovered_shape->selected = true;
+                    coordinate_system_select_shape(cs, hovered_shape);
+                    coordinate_system_set_dragged_shape(cs, hovered_shape);
                 }
-                else
-                {
-                    if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
-                        state = STATE_CS_DRAGGED;
-                    coordinate_system_deselect_shapes(cs);
-                }
+                else if (coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+                    state = STATE_CS_DRAGGED;
             }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+                coordinate_system_set_dragged_shape(cs, NULL);
             else if (input_is_key_released(SDL_SCANCODE_DELETE))
                 coordinate_system_delete_selected_shapes(cs);
             break;
@@ -143,9 +131,14 @@ int main(void)
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
                 Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                dragged_shape = point;
                 coordinate_system_deselect_shapes(cs);
-                point->selected = true;
+                coordinate_system_select_shape(cs, point);
+                coordinate_system_set_dragged_shape(cs, point);
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                coordinate_system_deselect_shapes(cs);
+                coordinate_system_set_dragged_shape(cs, NULL);
             }
             break;
         
@@ -154,29 +147,37 @@ int main(void)
             {
                 Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
                 coordinate_system_deselect_shapes(cs);
-                point->selected = true;
-                placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                vector_pop_back(cs->shapes);
-                line_create(cs, (Point*)point, (Point*)placing_point);
-                dragged_shape = point;
+                coordinate_system_select_shape(cs, point);
+                coordinate_system_set_dragged_shape(cs, point);
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                coordinate_system_deselect_shapes(cs);
+                coordinate_system_set_dragged_shape(cs, NULL);
+                Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                coordinate_system_set_dragged_shape(cs, (Shape*)placing_point);
+                line_create(cs, (Point*)vector_get(cs->shapes, vector_size(cs->shapes) - 2), (Point*)placing_point);
                 state = STATE_LINE_POINT1_PLACED;
             }
             break;
         case STATE_LINE_POINT1_PLACED:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                vector_push_back(cs->shapes, placing_point);
                 coordinate_system_deselect_shapes(cs);
-                ((Shape*)placing_point)->selected = true;
-                dragged_shape = (Shape*)placing_point;
-                placing_point = NULL;
-                state = STATE_LINE; 
+                Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                coordinate_system_select_shape(cs, (Shape*)placing_point);
+                coordinate_system_set_dragged_shape(cs, (Shape*)placing_point);
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+            {
+                coordinate_system_deselect_shapes(cs);
+                coordinate_system_set_dragged_shape(cs, NULL);
+                state = STATE_LINE;
             }
             else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
             {
-                vector_pop_back(cs->shapes);
-                placing_point->base.destroy(cs, (Shape*)placing_point);
-                placing_point = NULL;
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                shape_destroy(cs, vector_pop_back(cs->shapes));
                 coordinate_system_deselect_shapes(cs);
                 state = STATE_LINE;
             }
@@ -185,54 +186,52 @@ int main(void)
         case STATE_CIRCLE:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));;
+                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
                 coordinate_system_deselect_shapes(cs);
-                point->selected = true;
-                placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                vector_pop_back(cs->shapes);
-                circle_create(cs, (Point*)point, placing_point);
-                dragged_shape = point;
+                coordinate_system_select_shape(cs, point);
+                coordinate_system_set_dragged_shape(cs, point);
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                coordinate_system_deselect_shapes(cs);
+                coordinate_system_set_dragged_shape(cs, NULL);
+                Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                coordinate_system_set_dragged_shape(cs, (Shape*)placing_point);
+                circle_create(cs, (Point*)vector_get(cs->shapes, vector_size(cs->shapes) - 2), (Point*)placing_point);
                 state = STATE_CIRCLE_CENTER_PLACED;
             }
             break;
         case STATE_CIRCLE_CENTER_PLACED:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                //Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                //selected_shape = (Shape*)circle_create(cs, (Point*)selected_shape, vector2_distance(coordinates_to_screen(cs,
-                //                ((Point*)selected_shape)->coordinates), coordinates_to_screen(cs, ((Point*)point)->coordinates)) / cs->zoom);
-                vector_push_back(cs->shapes, placing_point);
                 coordinate_system_deselect_shapes(cs);
-                ((Shape*)placing_point)->selected = true;
-                dragged_shape = (Shape*)placing_point;
-                placing_point = NULL;
+                Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                coordinate_system_select_shape(cs, (Shape*)placing_point);
+                coordinate_system_set_dragged_shape(cs, (Shape*)placing_point);
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+            {
+                coordinate_system_deselect_shapes(cs);
+                coordinate_system_set_dragged_shape(cs, NULL);
                 state = STATE_CIRCLE;
             }
             else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
             {
-                vector_pop_back(cs->shapes);
-                placing_point->base.destroy(cs, (Shape*)placing_point);
-                placing_point = NULL;
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                shape_destroy(cs, vector_pop_back(cs->shapes));
                 coordinate_system_deselect_shapes(cs);
                 state = STATE_CIRCLE;
             }
             break;
         }
-        if (placing_point)
-        {
-            placing_point->coordinates = screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position()));
-            placing_point->base.draw(cs, (Shape*)placing_point);
-        }
-        else
-        {
-            SDL_SetCursor(cursor_default);
-            if (dragged_shape || state == STATE_CS_DRAGGED)
-                SDL_SetCursor(cursor_hand);
-            else if (coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position())) != NULL)
-                SDL_SetCursor(cursor_hand);
-        }
+        SDL_SetCursor(cursor_default);
+        if (coordinate_system_get_dragged_shape(cs) != NULL || state == STATE_CS_DRAGGED)
+            SDL_SetCursor(cursor_hand);
+        else if (coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position())) != NULL)
+            SDL_SetCursor(cursor_hand);
+
         coordinate_system_zoom(cs, 1.0 + input_get_mouse_wheel_delta() / 100.0 * MOUSE_WHEEL_SENSITIVITY);
-        
+        coordinate_system_update(cs);       
         //draw
         app_set_target(window);
         renderer_clear(WHITE);

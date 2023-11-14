@@ -2,6 +2,7 @@
 
 #include "../coordinate_system/coordinate_system.h"
 #include "../../renderer/renderer.h"
+#include "../../input/input.h"
 
 #include <math.h>
 
@@ -25,18 +26,19 @@ static bool _point_is_defined_by(Shape* self, Shape* shape);
 static bool _line_is_defined_by(Shape* self, Shape* shape);
 static bool _circle_is_defined_by(Shape* self, Shape* shape);
 
-static void _coordinate_system_remove_shape(CoordinateSystem* cs, Shape* shape);
+//static void _remove_shape(CoordinateSystem* cs, Shape* shape);
+
+ShapeDraw shape_draw_funcs[ST_COUNT] = {_point_draw, _line_draw, _circle_draw};
+ShapeTranslate shape_translate_funcs[ST_COUNT] = {_point_translate, _line_translate, _circle_translate};
+ShapeDestroy shape_destroy_funcs[ST_COUNT] = {_point_destroy, _line_destroy, _circle_destroy};
+ShapeOverlapPoint shape_overlap_point_funcs[ST_COUNT] = {_point_overlap, _line_overlap, _circle_overlap};
+ShapeIsDefinedBy shape_is_defined_by_funcs[ST_COUNT] = {_point_is_defined_by, _line_is_defined_by, _circle_is_defined_by};
 
 Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
 {
     Point* point = malloc(sizeof(Point));
-    point->base.selected = false;
     point->base.type = ST_POINT;
-    point->base.draw = _point_draw;
-    point->base.translate = _point_translate;
-    point->base.destroy = _point_destroy;
-    point->base.overlap_point = _point_overlap;
-    point->base.is_defined_by = _point_is_defined_by;
+    point->base.selected = false;
     point->coordinates = coordinates;
     vector_push_back(cs->shapes, point);
     return point;
@@ -44,13 +46,8 @@ Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
 Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
 {
     Line* line = malloc(sizeof(Line));
-    line->base.selected = false;
     line->base.type = ST_LINE;
-    line->base.draw = _line_draw;
-    line->base.translate = _line_translate;
-    line->base.destroy = _line_destroy;
-    line->base.overlap_point = _line_overlap;
-    line->base.is_defined_by = _line_is_defined_by;
+    line->base.selected = false;
     line->p1 = p1;
     line->p2 = p2;
     vector_push_back(cs->shapes, line);
@@ -59,32 +56,50 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
 Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_point)
 {
     Circle* circle = malloc(sizeof(Circle));
-    circle->base.selected = false;
     circle->base.type = ST_CIRCLE;
-    circle->base.draw = _circle_draw;
-    circle->base.translate = _circle_translate;
-    circle->base.destroy = _circle_destroy;
-    circle->base.overlap_point = _circle_overlap;
-    circle->base.is_defined_by = _circle_is_defined_by;
+    circle->base.selected = false;
     circle->center = center;
     circle->perimeter_point = perimeter_point;
     vector_push_back(cs->shapes, circle);
     return circle;
 }
 
-static void _point_destroy(CoordinateSystem* cs, Shape* self)
+void shape_draw(CoordinateSystem* cs, Shape* self)
 {
-    _coordinate_system_remove_shape(cs, self);
+    shape_draw_funcs[self->type](cs, self);
+}
+void shape_update(CoordinateSystem* cs, Shape* self)
+{
+    if (cs->dragged_shape == self)
+        shape_translate(cs, self, vector2_from_point(input_get_mouse_motion()));
+}
+void shape_translate(CoordinateSystem* cs, Shape* self, Vector2 translation)
+{
+    shape_translate_funcs[self->type](cs, self, translation);
+}
+void shape_destroy(CoordinateSystem* cs, Shape* self)
+{
+    shape_destroy_funcs[self->type](cs, self);
+}
+bool shape_overlap_point(CoordinateSystem* cs, Shape* self, Vector2 point)
+{
+    return shape_overlap_point_funcs[self->type](cs, self, point);
+}
+bool shape_is_defined_by(Shape* self, Shape* shape)
+{
+    return shape_is_defined_by_funcs[self->type](self, shape);
+}
+
+static void _point_destroy(CoordinateSystem* cs __attribute__((unused)), Shape* self)
+{
     free((Point*)self);
 }
-static void _line_destroy(CoordinateSystem* cs, Shape* self)
+static void _line_destroy(CoordinateSystem* cs __attribute__((unused)), Shape* self)
 {
-    _coordinate_system_remove_shape(cs, self);
     free((Line*)self);
 }
-static void _circle_destroy(CoordinateSystem* cs, Shape* self)
+static void _circle_destroy(CoordinateSystem* cs __attribute__((unused)), Shape* self)
 {
-    _coordinate_system_remove_shape(cs, self);
     free((Circle*)self);
 }
 
@@ -172,18 +187,4 @@ static bool _line_is_defined_by(Shape* self, Shape* shape)
 static bool _circle_is_defined_by(Shape* self, Shape* shape)
 {
     return (Shape*)((Circle*)self)->center == shape || (Shape*)((Circle*)self)->perimeter_point == shape;
-}
-
-static void _coordinate_system_remove_shape(CoordinateSystem* cs, Shape* shape)
-{
-    vector_remove(cs->shapes, shape);
-    for (size_t i = 0; i < vector_size(cs->shapes); i++)
-    {
-        Shape* shp = vector_get(cs->shapes, i);
-        if (shp->is_defined_by(shp, shape))
-        {
-            shp->destroy(cs, shp);
-            i--;
-        }
-    }
 }

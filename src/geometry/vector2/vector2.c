@@ -3,7 +3,7 @@
 #include <math.h>
 
 Vector2 vector2_create(double x, double y) { return (Vector2){x, y}; }
-Vector2 vector2_from_polar(double angle, double length) { return (Vector2){cos(angle) * length, sin(angle) * length}; }
+Vector2 vector2_from_polar(double angle, double length) { return (Vector2){ cos(angle) * length, sin(angle) * length}; }
 Vector2 vector2_from_point(SDL_Point point) { return (Vector2){point.x, point.y}; }
 
 Vector2 vector2_zero() { return (Vector2){0, 0}; }
