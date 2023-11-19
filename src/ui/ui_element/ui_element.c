@@ -99,6 +99,7 @@ UIContainer* ui_create_container(UIContainer* parent, UIConstraints constraints,
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_container_update;
     element->recalculate = _ui_container_recalculate;
     element->render = _ui_container_render;
@@ -126,6 +127,7 @@ UIPanel* ui_create_panel(UIContainer* parent, UIConstraints constraints, Color c
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_panel_update;
     element->recalculate = _ui_panel_recalculate;
     element->render = _ui_panel_render;
@@ -155,6 +157,7 @@ UILabel* ui_create_label(UIContainer* parent, UIConstraints constraints, const c
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_label_update;
     element->recalculate = _ui_label_recalculate;
     element->render = _ui_label_render;
@@ -182,6 +185,7 @@ UIButton* ui_create_button(UIContainer* parent, UIConstraints constraints, const
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_button_update;
     element->recalculate = _ui_button_recalculate;
     element->render = _ui_button_render;
@@ -214,6 +218,7 @@ UIImageButton* ui_create_imagebutton(UIContainer* parent, UIConstraints constrai
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_imagebutton_update;
     element->recalculate = _ui_imagebutton_recalculate;
     element->render = _ui_imagebutton_render;
@@ -242,6 +247,7 @@ UITextbox* ui_create_textbox(UIContainer* parent, UIConstraints constraints, con
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_textbox_update;
     element->recalculate = _ui_textbox_recalculate;
     element->render = _ui_textbox_render;
@@ -274,6 +280,7 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_checkbox_update;
     element->recalculate = _ui_checkbox_recalculate;
     element->render = _ui_checkbox_render;
@@ -305,6 +312,7 @@ UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, doubl
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_slider_update;
     element->recalculate = _ui_slider_recalculate;
     element->render = _ui_slider_render;
@@ -337,6 +345,7 @@ UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraint
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_dropdown_update;
     element->recalculate = _ui_dropdown_recalculate;
     element->render = _ui_dropdown_render;
@@ -386,6 +395,7 @@ UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constrai
     element->parent = (UIElement*)parent;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_splitbutton_update;
     element->recalculate = _ui_splitbutton_recalculate;
     element->render = _ui_splitbutton_render;
@@ -446,8 +456,20 @@ UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constrai
     return splitbutton;
 }
 
+void ui_show_element(UIElement* self)
+{
+    self->shown = true;
+}
+void ui_hide_element(UIElement* self)
+{
+    self->shown = false;
+}
+
 void _ui_container_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIContainer* container = (UIContainer*)self;
     for (int32_t i = container->children->size - 1; i >= 0; i--)
     {
@@ -502,6 +524,9 @@ void _ui_container_recalculate(UIElement* sibling, UIElement* self)
 }
 void _ui_container_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIContainer* container = (UIContainer*)self;
     for (size_t i = 0; i < vector_size(container->children); i++)
     {
@@ -523,6 +548,9 @@ void _ui_container_destroy(UIElement* self)
 
 static void _ui_panel_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
         _ui_get_target()->mouse_captured = true;
@@ -533,10 +561,13 @@ static void _ui_panel_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_panel_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIPanel* panel = (UIPanel*)self;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, panel->corner_radius, panel->color);
     for (size_t i = 0; i < panel->border_width; i++)
-        renderer_draw_rounded_rect(self->position.x + i, self->position.y + i, self->size.x - 2 * i, self->size.y - 2 * i, panel->corner_radius, panel->border_color);
+        renderer_draw_rounded_rect(self->position.x + (i - 1), self->position.y + (i - 1), self->size.x - 2 * (i - 1), self->size.y - 2 * (i - 1), panel->corner_radius, panel->border_color);
 }
 static void _ui_panel_destroy(UIElement* self)
 {
@@ -546,6 +577,9 @@ static void _ui_panel_destroy(UIElement* self)
 
 static void _ui_label_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     SDL_Point size = renderer_query_text_size(((UILabel*)self)->text);
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, size.x, size.y))
@@ -575,6 +609,9 @@ static void _ui_label_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_label_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UILabel* label = (UILabel*)self;
     renderer_draw_text(label->text, self->position.x, self->position.y, label->color);
 }
@@ -586,6 +623,9 @@ static void _ui_label_destroy(UIElement* self)
 
 static void _ui_button_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIButton* button = (UIButton*)self;
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
@@ -618,6 +658,9 @@ static void _ui_button_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_button_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIButton* button = (UIButton*)self;
     Color color = color_clever_shift(button->color, button->mouse_state == MS_PRESS ? 15 : (button->mouse_state == MS_HOVER ? 10 : 0));
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, button->corner_radius, color);
@@ -632,6 +675,9 @@ static void _ui_button_destroy(UIElement* self)
 
 static void _ui_imagebutton_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIImageButton* button = (UIImageButton*)self;
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
@@ -659,6 +705,9 @@ static void _ui_imagebutton_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_imagebutton_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIImageButton* button = (UIImageButton*)self;
     renderer_draw_texture(button->texture, self->position.x, self->position.y, self->size.x, self->size.y);
     if (button->mouse_state != MS_NONE)
@@ -678,6 +727,9 @@ static void _ui_imagebutton_destroy(UIElement* self)
 
 static void _ui_textbox_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UITextbox* textbox = (UITextbox*)self;
     if (textbox->focused) 
     {
@@ -769,6 +821,9 @@ static void _ui_textbox_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_textbox_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UITextbox* textbox = (UITextbox*)self;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->mouse_state == MS_PRESS ? color_clever_shift(textbox->color, 15) : (textbox->mouse_state == MS_HOVER ? color_clever_shift(textbox->color, 10) : textbox->color));
     renderer_draw_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, 2, textbox->text_color);
@@ -799,6 +854,9 @@ static void _ui_textbox_destroy(UIElement* self)
 
 static void _ui_checkbox_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UICheckbox* checkbox = (UICheckbox*)self;
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
@@ -827,6 +885,9 @@ static void _ui_checkbox_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_checkbox_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UICheckbox* checkbox = (UICheckbox*)self;
     if (checkbox->checked)
     {
@@ -861,6 +922,9 @@ static void _ui_checkbox_destroy(UIElement* self)
 
 static void _ui_slider_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UISlider* slider = (UISlider*)self;
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
@@ -891,6 +955,9 @@ static void _ui_slider_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_slider_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UISlider* slider = (UISlider*)self;
     int handle_thickness = (int)round(1.4 * slider->thickness);
     Color color = color_clever_shift(slider->color, slider->mouse_state == MS_PRESS ? 15 : (slider->mouse_state == MS_HOVER ? 10 : 0));
@@ -905,6 +972,9 @@ static void _ui_slider_destroy(UIElement* self)
 
 static void _ui_dropdown_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIDropdownList* dropdown = (UIDropdownList*)self;
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->update(top_item);
@@ -936,6 +1006,9 @@ static void _ui_dropdown_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_dropdown_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UIDropdownList* dropdown = (UIDropdownList*)self;
     UIElement* top_item = (UIElement*)vector_get(dropdown->items, 0);
     top_item->render(top_item);
@@ -975,6 +1048,7 @@ static _UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstr
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_dropdownitem_update;
     element->recalculate = _ui_dropdownitem_recalculate;
     element->render = _ui_dropdownitem_render;
@@ -989,6 +1063,9 @@ static _UIDropdownItem* _ui_dropdownitem_create(UIDropdownList* parent, UIConstr
 }
 static void _ui_dropdownitem_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     _UIDropdownItem* item = (_UIDropdownItem*)self;
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
@@ -1016,6 +1093,9 @@ static void _ui_dropdownitem_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_dropdownitem_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     _UIDropdownItem* item = (_UIDropdownItem*)self;
     int shift = item->dropdown_index == -1 ? 0 : 8;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_dropdown->corner_radius,
@@ -1049,6 +1129,9 @@ static void _ui_dropdownitem_on_click(_UIDropdownItem* self)
 
 static void _ui_splitbutton_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UISplitButton* splitbutton = (UISplitButton*)self;        
     UIElement* top_item = (UIElement*)vector_get(splitbutton->items, 0);
     top_item->update(top_item);
@@ -1084,6 +1167,9 @@ static void _ui_splitbutton_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_splitbutton_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     UISplitButton* splitbutton = (UISplitButton*)self;
     UIElement* top_item = (UIElement*)vector_get(splitbutton->items, 0);
     top_item->render(top_item);
@@ -1117,6 +1203,7 @@ static _UISplitButtonItem* _ui_splitbuttonitem_create(UISplitButton* parent, UIC
     element->constraints = constraints;
     element->position = (SDL_Point){0, 0};
     element->size = (SDL_Point){0, 0};
+    element->shown = true;
     element->update = _ui_splitbuttonitem_update;
     element->recalculate = _ui_splitbuttonitem_recalculate;
     element->render = _ui_splitbuttonitem_render;
@@ -1131,6 +1218,9 @@ static _UISplitButtonItem* _ui_splitbuttonitem_create(UISplitButton* parent, UIC
 }
 static void _ui_splitbuttonitem_update(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     _UISplitButtonItem* item = (_UISplitButtonItem*)self;
     if (!_ui_get_target()->mouse_captured && check_collision_point_rect(input_get_mouse_position().x, input_get_mouse_position().y,
                                    self->position.x, self->position.y, self->size.x, self->size.y))
@@ -1168,6 +1258,9 @@ static void _ui_splitbuttonitem_recalculate(UIElement* sibling, UIElement* self)
 }
 static void _ui_splitbuttonitem_render(UIElement* self)
 {
+    if (!self->shown)
+        return;
+
     _UISplitButtonItem* item = (_UISplitButtonItem*)self;
     renderer_draw_filled_rounded_rect(self->position.x, self->position.y, self->size.x, self->size.y, item->parent_splitbutton->corner_radius,
                                       item->mouse_state == MS_PRESS ? color_clever_shift(item->parent_splitbutton->color, 15)

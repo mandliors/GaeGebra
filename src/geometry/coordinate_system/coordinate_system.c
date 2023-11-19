@@ -24,6 +24,17 @@ CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vecto
     cs->dragged_shape = NULL;
     return cs;
 }
+void coordinate_system_clear(CoordinateSystem* cs)
+{
+    if (cs == NULL)
+        return;
+    while (vector_size(cs->shapes) > 0)
+    {
+        Shape* shape = vector_get(cs->shapes, 0);
+        coordinate_system_destroy_shape(cs, shape);
+    }
+    vector_clear(cs->shapes);
+}
 void coordinate_system_destroy(CoordinateSystem* cs)
 {
     if (cs == NULL)
@@ -261,7 +272,7 @@ void coordinate_system_draw(CoordinateSystem* cs)
     }
 
     double x = cs->origin.x * cs->size.x + cs->position.x;
-    for (double y = cs->origin.y * cs->size.y + cs->position.y; y > -step; y -= step)
+    for (double y = cs->origin.y * cs->size.y + cs->position.y; y > cs->position.y - step; y -= step)
     {
         renderer_draw_line(cs->position.x - 10, y, cs->position.x - 10 + cs->size.x + 10, y, 1, grid_color);
         renderer_draw_line(x + 5, y, x - 5, y, 1, BLACK);

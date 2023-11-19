@@ -29,6 +29,12 @@ typedef struct CoordinateSystem
  */
 CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vector2 origin);
 /**
+ * @brief Clears a coordinate system (removes all the shapes)
+ * 
+ * @param cs 
+ */
+void coordinate_system_clear(CoordinateSystem* cs);
+/**
  * @brief Destroys a coordinate system
  * 
  * @param cs The coordinate system to destroy

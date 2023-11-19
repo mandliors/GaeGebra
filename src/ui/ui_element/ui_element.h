@@ -27,6 +27,7 @@ typedef struct UIElement
 	UIConstraints constraints;
 	SDL_Point position;
 	SDL_Point size;
+	bool shown;
 
 	UIElementUpdate update;
 	UIElementRecalculate recalculate;
@@ -182,6 +183,9 @@ UICheckbox* ui_create_checkbox(UIContainer* parent, UIConstraints constraints, C
 UISlider* ui_create_slider(UIContainer* parent, UIConstraints constraints, double value, Color color, Color slider_color, void (*on_value_changed)(UISlider* self, double value));
 UIDropdownList* ui_create_dropdown(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_selection_changed)(UIDropdownList* self, Sint32 index));
 UISplitButton* ui_create_splitbutton(UIContainer* parent, UIConstraints constraints, char* items, Color color, Color text_color, void (*on_item_clicked)(UISplitButton* self, Sint32 index), bool auto_dropdown);
+
+void ui_show_element(UIElement* self);
+void ui_hide_element(UIElement* self);
 
 //internal functions
 void _ui_container_update(UIElement* self);

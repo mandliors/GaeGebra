@@ -32,15 +32,13 @@ void on_point_clicked(UIButton* self);
 void on_line_clicked(UIButton* self);
 void on_circle_clicked(UIButton* self);
 
+void on_open_button_clicked(UIButton* self);
+void on_save_button_clicked(UIButton* self);
+void on_cancel_button_clicked(UIButton* self);
+
 void on_filemenu_clicked(UISplitButton* self, Sint32 index);
 void on_editmenu_clicked(UISplitButton* self, Sint32 index);
 void on_canvas_size_changed(UIContainer* self, SDL_Point size);
-
-/* TODO: add shape type, put points back to the shapes vector
-         add selected bool to shapes
-         check intersection between shapes, add multiple types of points (intersections)
-         shapes should have indices to the defining points?
-*/
 
 typedef enum State
 {
@@ -53,8 +51,10 @@ typedef enum State
     STATE_LINE_POINT1_PLACED,
 
     STATE_CIRCLE,
-    STATE_CIRCLE_CENTER_PLACED
+    STATE_CIRCLE_CENTER_PLACED,
 
+    STATE_OPENING,
+    STATE_SAVEING
 } State;
 
 CoordinateSystem* cs;
@@ -74,20 +74,40 @@ int main(void)
     SDL_Cursor* cursor_hand = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
     SDL_Cursor* cursor_default = SDL_GetDefaultCursor();
 
-    UIContainer* toolbar = ui_create_container(window_get_main_container(window), constraints_from_string("0p 30p 1r 50p"), NULL);
+    UIContainer* main_container = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 1r"), NULL);
+    UIContainer* toolbar = ui_create_container(main_container, constraints_from_string("0p 30p 1r 50p"), NULL);
     ui_create_panel(toolbar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(40), WHITE, 0, 0);
     ui_create_button(toolbar, constraints_from_string("10p c 100p 0.8r"), "Pointer", color_from_grayscale(80), WHITE, on_pointer_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Point", color_from_grayscale(80), WHITE, on_point_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Line", color_from_grayscale(80), WHITE, on_line_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Circle", color_from_grayscale(80), WHITE, on_circle_clicked);
-    ui_create_textbox(toolbar, constraints_from_string("10o c 200p 0.8r"), "bing chilling", WHITE, BLACK, NULL);
     
-    UIContainer* menubar = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 30p"), NULL);
+    UIContainer* menubar = ui_create_container(main_container, constraints_from_string("0p 0p 1r 30p"), NULL);
     ui_create_panel(menubar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), WHITE, 0, 0);
-    ui_create_splitbutton(menubar, constraints_from_string("0p 0p 1r 1r"), "File;Open;Save", color_from_grayscale(180), BLACK, on_filemenu_clicked, true);
-    ui_create_splitbutton(menubar, constraints_from_string("0o 0p 1r 1r"), "Edit;Close", color_from_grayscale(180), BLACK, on_editmenu_clicked, true);
+    ui_create_splitbutton(menubar, constraints_from_string("0p 0p 1r 1r"), "File;Open;Save As", color_from_grayscale(180), BLACK, on_filemenu_clicked, true);
+    ui_create_splitbutton(menubar, constraints_from_string("0o 0p 1r 1r"), "Edit;Clear;Close", color_from_grayscale(180), BLACK, on_editmenu_clicked, true);
 
-    UIContainer* canvas = ui_create_container(window_get_main_container(window), constraints_from_string("0p 90p 1r -100p"), on_canvas_size_changed);
+    UIContainer* save_container = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 1r"), NULL);
+    ui_create_panel(save_container, constraints_from_string("0p 0p 1r 1r"), color_fade(BLACK, 0.7), WHITE, 0, 0);
+    UIContainer* save_menu = ui_create_container(save_container, constraints_from_string("c c 0.3r 200p"), NULL);
+    ui_create_panel(save_menu, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), BLACK, 2, 0);
+    ui_create_label(save_menu, constraints_from_string("0.05r 15p 0.9r 80p"), "Save As:", BLACK);
+    ui_create_textbox(save_menu, constraints_from_string("c 15o 0.9r 60p"), "project.gae", WHITE, BLACK, NULL);
+    ui_create_button(save_menu, constraints_from_string("0.05r 15o 0.44r 50p"), "Save", color_from_grayscale(80), WHITE, on_save_button_clicked);
+    ui_create_button(save_menu, constraints_from_string("0.51r -50o 0.44r 50p"), "Cancel", color_from_grayscale(80), WHITE, on_cancel_button_clicked);
+    ui_hide_element((UIElement*)save_container);
+
+    UIContainer* open_container = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 1r"), NULL);
+    ui_create_panel(open_container, constraints_from_string("0p 0p 1r 1r"), color_fade(BLACK, 0.7), WHITE, 0, 0);
+    UIContainer* open_menu = ui_create_container(open_container, constraints_from_string("c c 0.3r 200p"), NULL);
+    ui_create_panel(open_menu, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), BLACK, 2, 0);
+    ui_create_label(open_menu, constraints_from_string("0.05r 15p 0.9r 80p"), "Open:", BLACK);
+    ui_create_textbox(open_menu, constraints_from_string("c 15o 0.9r 60p"), "project.gae", WHITE, BLACK, NULL);
+    ui_create_button(open_menu, constraints_from_string("0.05r 15o 0.44r 50p"), "Open", color_from_grayscale(80), WHITE, on_open_button_clicked);
+    ui_create_button(open_menu, constraints_from_string("0.51r -50o 0.44r 50p"), "Cancel", color_from_grayscale(80), WHITE, on_cancel_button_clicked);
+    ui_hide_element((UIElement*)open_container);
+
+    UIContainer* canvas = ui_create_container(main_container, constraints_from_string("0p 90p 1r -100p"), on_canvas_size_changed);
     cs = coordinate_system_create(vector2_create(canvas->base.position.x, canvas->base.position.y),
                                   vector2_create(canvas->base.size.x, canvas->base.size.y),
                                   vector2_create(0.5, 0.5));
@@ -223,15 +243,33 @@ int main(void)
                 state = STATE_CIRCLE;
             }
             break;
+
+        case STATE_SAVEING:
+            if (input_is_key_released(SDL_SCANCODE_ESCAPE))
+                state = STATE_POINTER;
+            else
+                ui_show_element((UIElement*)save_container);
+            break;
+        
+        case STATE_OPENING:
+            if (input_is_key_released(SDL_SCANCODE_ESCAPE))
+                state = STATE_POINTER;
+            else
+                ui_show_element((UIElement*)open_container);
+            break;
         }
         SDL_SetCursor(cursor_default);
-        if (coordinate_system_get_dragged_shape(cs) != NULL || state == STATE_CS_DRAGGED)
-            SDL_SetCursor(cursor_hand);
-        else if (coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position())) != NULL)
-            SDL_SetCursor(cursor_hand);
+        if (state != STATE_OPENING && state != STATE_SAVEING)
+        {
+            if (coordinate_system_get_dragged_shape(cs) != NULL || state == STATE_CS_DRAGGED)
+                SDL_SetCursor(cursor_hand);
+            else if (coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position())) != NULL)
+                SDL_SetCursor(cursor_hand);
+        }
 
         coordinate_system_zoom(cs, 1.0 + input_get_mouse_wheel_delta() / 100.0 * MOUSE_WHEEL_SENSITIVITY);
         coordinate_system_update(cs);       
+        
         //draw
         app_set_target(window);
         renderer_clear(WHITE);
@@ -268,23 +306,41 @@ void on_circle_clicked(UIButton* self __attribute__((unused)))
     state = STATE_CIRCLE;
 }
 
+void on_open_button_clicked(UIButton* self)
+{
+    CoordinateSystem* new_cs = coordinate_system_load(((UITextbox*)vector_get(((UIContainer*)self->base.parent)->children, 2))->text);
+    new_cs->position = cs->position;
+    new_cs->size = cs->size;
+    new_cs->origin = vector2_create(0.5, 0.5);
+    coordinate_system_destroy(cs);
+    cs = new_cs;
+    ui_hide_element((UIElement*)self->base.parent->parent);
+    state = STATE_POINTER;
+}
+void on_save_button_clicked(UIButton* self)
+{
+    coordinate_system_save(cs, (((UITextbox*)vector_get(((UIContainer*)self->base.parent)->children, 2))->text));
+    ui_hide_element((UIElement*)self->base.parent->parent);
+    state = STATE_POINTER;
+}
+void on_cancel_button_clicked(UIButton* self)
+{
+    ui_hide_element((UIElement*)self->base.parent->parent);
+    state = STATE_POINTER;
+}
+
 void on_filemenu_clicked(UISplitButton* self __attribute__((unused)), Sint32 index __attribute__((unused)))
 {
     if (index == 0)
-    {
-        CoordinateSystem* new_cs = coordinate_system_load("project.gae");
-        new_cs->position = cs->position;
-        new_cs->size = cs->size;
-        new_cs->origin = vector2_create(0.5, 0.5);
-        coordinate_system_destroy(cs);
-        cs = new_cs;
-    }
+        state = STATE_OPENING;
     else if (index == 1)
-        coordinate_system_save(cs, "project.gae");
+        state = STATE_SAVEING;
 }
 void on_editmenu_clicked(UISplitButton* self __attribute__((unused)), Sint32 index __attribute__((unused)))
 {
     if (index == 0)
+        coordinate_system_clear(cs);
+    else if (index == 1)
         app_request_close();
 }
 void on_canvas_size_changed(UIContainer* self, SDL_Point size)
