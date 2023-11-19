@@ -36,6 +36,21 @@ CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vecto
 void coordinate_system_destroy(CoordinateSystem* cs);
 
 /**
+ * @brief Saves a coordinate system to a file (saves the shapes into a .gae file)
+ * 
+ * @param cs The coordinate system to save
+ * @param path The path to save the coordinate system to
+ */
+void coordinate_system_save(CoordinateSystem* cs, const char* path);
+/**
+ * @brief Loads a coordinate system from a file (loads the shapes from a .gae file)
+ * 
+ * @param path The path to load the coordinate system from
+ * @return CoordinateSystem* The loaded coordinate system
+ */
+CoordinateSystem* coordinate_system_load(const char* path);
+
+/**
  * @brief Translates a point from the screen to the coordinate system
  * 
  * @param cs The coordinate system to translate the point to

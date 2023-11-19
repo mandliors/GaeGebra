@@ -4,7 +4,9 @@ static Intersection _line_line_intersection(Line* line1, Line* line2);
 static Intersection _line_circle_intersection(Line* line, Circle* circle);
 static Intersection _circle_circle_intersection(Circle* circle1, Circle* circle2);
 
-Intersection intersection_new(Shape* shape1, Shape* shape2)
+static bool _equals(double a, double b);
+
+Intersection intersection_create(Shape* shape1, Shape* shape2)
 {
     Intersection intersection;
     intersection.points = vector_create(0);
@@ -49,13 +51,52 @@ Intersection intersection_get(Shape* shape1, Shape* shape2)
 }
 void intersection_destroy(Intersection* intersection)
 {
+    if (intersection != NULL && intersection->points != NULL)
+        for (size_t i = 0; i < vector_size(intersection->points); i++)
+            free(vector_get(intersection->points, i));
     free(intersection->points);
-    free(intersection);
 }
 
 static Intersection _line_line_intersection(Line* line1, Line* line2)
 {
-    Vector2 p1 = line1->p1->coordinates;
+    //My method
+    Vector2 normal1 = vector2_rotate90(vector2_subtract(line1->p2->coordinates, line1->p1->coordinates));
+    Vector2 normal2 = vector2_rotate90(vector2_subtract(line2->p2->coordinates, line2->p1->coordinates));
+    double c1 = vector2_dot(normal1, line1->p1->coordinates);
+    double c2 = vector2_dot(normal2, line2->p1->coordinates);
+    double x, y;
+
+    if (vector2_dot(normal1, normal2) == 0)
+        return (Intersection){ NULL, NULL, NULL };
+    
+    if (_equals(normal1.y, 0.0))
+    {
+        if (_equals(normal2.y, 0.0))
+            return (Intersection){ NULL, NULL, NULL };
+        x = c1 / normal1.x;
+        y = (c2 - normal2.y * x) / normal2.y;
+    }
+    else if (_equals(normal2.y, 0.0))
+    {
+        x = c2 / normal2.x;
+        y = (c1 - normal1.y * x) / normal1.y;
+    }
+    else
+    {
+        x = (normal2.y * c1 / normal1.y - c2) / (normal1.x * normal2.y / normal1.y - normal2.x);
+        if (!_equals(normal1.y, 0.0))
+            y = (c1 - normal1.x * x) / normal1.y;
+        else
+            y = (c2 - normal2.x * x) / normal2.y;
+    }
+    Vector2* intersection_point = malloc(sizeof(Vector2));
+    *intersection_point = vector2_create(x, y);
+    Intersection intersection = intersection_create((Shape*)line1, (Shape*)line2);
+    vector_push_back(intersection.points, intersection_point);
+    return intersection;
+
+    //---------------------------- LINE SEGEMENT INTERSECTION -------------------------------------
+    /*Vector2 p1 = line1->p1->coordinates;
     Vector2 p2 = line1->p2->coordinates;
     Vector2 p3 = line2->p1->coordinates;
     Vector2 p4 = line2->p2->coordinates;
@@ -72,9 +113,9 @@ static Intersection _line_line_intersection(Line* line1, Line* line2)
 
     Vector2* intersection_point = malloc(sizeof(Vector2));
     *intersection_point = vector2_add(p1, vector2_multiply(vector2_subtract(p2, p1), vector2_create(ua, ua)));
-    Intersection intersection = intersection_new((Shape*)line1, (Shape*)line2);
+    Intersection intersection = intersection_create((Shape*)line1, (Shape*)line2);
     vector_push_back(intersection.points, intersection_point);
-    return intersection;
+    return intersection;*/
 }
 static Intersection _line_circle_intersection(Line* line, Circle* circle)
 {
@@ -102,7 +143,7 @@ static Intersection _line_circle_intersection(Line* line, Circle* circle)
     {
         Vector2* intersection_point = malloc(sizeof(Vector2));
         *intersection_point = vector2_add(p1, vector2_multiply(d, vector2_create(t1, t1)));
-        Intersection intersection = intersection_new((Shape*)line, (Shape*)circle);
+        Intersection intersection = intersection_create((Shape*)line, (Shape*)circle);
         vector_push_back(intersection.points, intersection_point);
         return intersection;
     }
@@ -110,7 +151,7 @@ static Intersection _line_circle_intersection(Line* line, Circle* circle)
     {
         Vector2* intersection_point = malloc(sizeof(Vector2));
         *intersection_point = vector2_add(p1, vector2_multiply(d, vector2_create(t2, t2)));
-        Intersection intersection = intersection_new((Shape*)line, (Shape*)circle);
+        Intersection intersection = intersection_create((Shape*)line, (Shape*)circle);
         vector_push_back(intersection.points, intersection_point);
         return (Intersection){ NULL, NULL, NULL };
     }
@@ -118,27 +159,29 @@ static Intersection _line_circle_intersection(Line* line, Circle* circle)
 }
 static Intersection _circle_circle_intersection(Circle* circle1, Circle* circle2)
 {
-    Vector2 center1 = circle1->center->coordinates;
-    Vector2 center2 = circle2->center->coordinates;
-    float radius1 = vector2_distance(center1, circle1->perimeter_point->coordinates);
-    float radius2 = vector2_distance(center2, circle2->perimeter_point->coordinates);
+    double r0 = vector2_distance(circle1->center->coordinates, circle1->perimeter_point->coordinates);
+    double r1 = vector2_distance(circle2->center->coordinates, circle2->perimeter_point->coordinates);
+    double d = vector2_distance(circle1->center->coordinates, circle2->center->coordinates);
 
-    float d = vector2_distance(center1, center2);
-    if (d > radius1 + radius2)
+    if (d > r0 + r1 || d < fabs(r0 - r1))
         return (Intersection){ NULL, NULL, NULL };
-    if (d < fabs(radius1 - radius2))
-        return (Intersection){ NULL, NULL, NULL };
-    if (d == 0 && radius1 == radius2)
-        return (Intersection){ NULL, NULL, NULL };
+    
+    double a = (r0 * r0 - r1 * r1 + d * d) / (2 * d);
+    double h = sqrt(r0 * r0 - a * a);
+    Vector2 p2 = vector2_add(circle1->center->coordinates, vector2_multiply(vector2_subtract(circle2->center->coordinates, circle1->center->coordinates), vector2_create(a / d, a / d)));
+    Vector2 po = vector2_multiply(vector2_rotate90(vector2_subtract(circle2->center->coordinates, circle1->center->coordinates)), vector2_create(h / d, h / d));
 
-    float a = (radius1 * radius1 - radius2 * radius2 + d * d) / (2 * d);
-    float h = sqrt(radius1 * radius1 - a * a);
-    Vector2 p2 = vector2_add(center1, vector2_multiply(vector2_subtract(center2, center1), vector2_create(a / d, a / d)));
-    Vector2 p3 = vector2_add(p2, vector2_multiply(vector2_rotate90(vector2_subtract(center2, center1)), vector2_create(h / d, h / d)));
-
-    Vector2* intersection_point = malloc(sizeof(Vector2));
-    *intersection_point = p3;
-    Intersection intersection = intersection_new((Shape*)circle1, (Shape*)circle2);
-    vector_push_back(intersection.points, intersection_point);
+    Vector2* intersection_point1 = malloc(sizeof(Vector2));
+    *intersection_point1 = vector2_add(p2, po);
+    Vector2* intersection_point2 = malloc(sizeof(Vector2));
+    *intersection_point2 = vector2_subtract(p2, po);
+    Intersection intersection = intersection_create((Shape*)circle1, (Shape*)circle2);
+    vector_push_back(intersection.points, intersection_point1);
+    vector_push_back(intersection.points, intersection_point2);
     return intersection;
+}
+
+static bool _equals(double a, double b)
+{
+    return fabs(a - b) < EPSILON;
 }

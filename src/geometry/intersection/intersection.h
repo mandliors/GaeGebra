@@ -3,6 +3,8 @@
 #include "../shape/shape.h"
 #include "../../utils/vector/vector.h"
 
+#define EPSILON 0.0001
+
 typedef struct Intersection
 {
     Vector* points;
@@ -10,6 +12,6 @@ typedef struct Intersection
     Shape* shape2;
 } Intersection;
 
-Intersection intersection_new(Shape* shape1, Shape* shape2);
+Intersection intersection_create(Shape* shape1, Shape* shape2);
 Intersection intersection_get(Shape* shape1, Shape* shape2);
 void intersection_destroy(Intersection* intersection);

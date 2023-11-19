@@ -10,7 +10,8 @@
 #include "../input/input.h"
 #include "../ui/ui.h"
 
-AppData app_data;
+static AppData app_data;
+static Window* target;
 
 void app_init()
 {
@@ -29,6 +30,7 @@ void app_init()
     app_data.last_frame_start = SDL_GetTicks();
     app_data.frame_start = SDL_GetTicks();
     app_data.delta_time = 0.0;
+    target = NULL;
     _font_init();
     _texture_init();
 }
@@ -97,6 +99,11 @@ void app_set_target(Window* window)
     _renderer_set_target(window->renderer);
     _input_set_target(&window->input_data);
     _ui_set_target(&window->ui_data);
+    target = window;
+}
+Window* app_get_target()
+{
+    return target;
 }
 Vector* app_get_windows()
 {

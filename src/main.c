@@ -84,7 +84,7 @@ int main(void)
     
     UIContainer* menubar = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 30p"), NULL);
     ui_create_panel(menubar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), WHITE, 0, 0);
-    ui_create_splitbutton(menubar, constraints_from_string("0p 0p 1r 1r"), "File;Close", color_from_grayscale(180), BLACK, on_filemenu_clicked, true);
+    ui_create_splitbutton(menubar, constraints_from_string("0p 0p 1r 1r"), "File;Open;Save", color_from_grayscale(180), BLACK, on_filemenu_clicked, true);
     ui_create_splitbutton(menubar, constraints_from_string("0o 0p 1r 1r"), "Edit;Close", color_from_grayscale(180), BLACK, on_editmenu_clicked, true);
 
     UIContainer* canvas = ui_create_container(window_get_main_container(window), constraints_from_string("0p 90p 1r -100p"), on_canvas_size_changed);
@@ -271,7 +271,16 @@ void on_circle_clicked(UIButton* self __attribute__((unused)))
 void on_filemenu_clicked(UISplitButton* self __attribute__((unused)), Sint32 index __attribute__((unused)))
 {
     if (index == 0)
-        app_request_close();
+    {
+        CoordinateSystem* new_cs = coordinate_system_load("project.gae");
+        new_cs->position = cs->position;
+        new_cs->size = cs->size;
+        new_cs->origin = vector2_create(0.5, 0.5);
+        coordinate_system_destroy(cs);
+        cs = new_cs;
+    }
+    else if (index == 1)
+        coordinate_system_save(cs, "project.gae");
 }
 void on_editmenu_clicked(UISplitButton* self __attribute__((unused)), Sint32 index __attribute__((unused)))
 {

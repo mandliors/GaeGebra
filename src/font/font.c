@@ -1,7 +1,7 @@
 #include "font.h"
 #include "../utils/vector/vector.h"
 
-Vector* fonts;
+static Vector* fonts;
 
 Font* font_load(const char* path, int size)
 {

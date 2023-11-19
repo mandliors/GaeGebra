@@ -1,7 +1,7 @@
 #include "input.h"
 #include "../app/app.h"
 
-InputData* target_input_data;
+static InputData* target_input_data;
 
 bool input_is_mouse_button_down(int button)
 {

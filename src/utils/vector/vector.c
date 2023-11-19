@@ -93,6 +93,15 @@ bool vector_contains(Vector* vector, void* value)
 			return true;
 	return false;
 }
+int vector_index_of(Vector* vector, void* value)
+{
+	if (vector == NULL)
+		return -1;
+	for (size_t i = 0; i < vector->size; i++)
+		if (vector->data[i] == value)
+			return i;
+	return -1;
+}
 void vector_remove_at(Vector* vector, size_t idx)
 {
 	if (vector == NULL || idx >= vector->size)
@@ -140,6 +149,7 @@ void vector_clear(Vector* vector)
 	if (vector == NULL)
 		return;
 	free(vector->data);
+	vector->data = NULL;
 	vector->capacity = 0;
 	vector->size = 0;
 }

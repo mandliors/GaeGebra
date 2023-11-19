@@ -26,6 +26,7 @@ void app_close();
 void app_set_target_fps(Uint32 fps);
 
 void app_set_target(Window* window);
+Window* app_get_target();
 Vector* app_get_windows();
 double app_get_time();
 double app_get_delta_time();

@@ -1,7 +1,7 @@
 #include "texture.h"
 #include "../utils/vector/vector.h"
 
-Vector* textures;
+static Vector* textures;
 
 Texture* texture_load(SDL_Renderer* renderer, const char* path)
 {

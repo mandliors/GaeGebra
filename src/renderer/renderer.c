@@ -2,8 +2,8 @@
 #include "../texture/texture.h"
 #include "../font/font.h"
 
-SDL_Renderer* target_renderer;
-Font* default_font;
+static SDL_Renderer* target_renderer;
+static Font* default_font;
 
 void renderer_set_default_font(Font* font)
 {

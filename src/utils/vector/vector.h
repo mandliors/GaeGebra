@@ -16,6 +16,7 @@ void vector_push_back(Vector* vector, void* value);
 void* vector_pop_back(Vector* vector);
 void vector_insert(Vector* vector, size_t idx, void* value);
 bool vector_contains(Vector* vector, void* value);
+int vector_index_of(Vector* vector, void* value);
 void vector_remove_at(Vector* vector, size_t idx);
 void vector_remove(Vector* vector, void* value);
 void vector_reserve(Vector* vector, size_t capacity);
