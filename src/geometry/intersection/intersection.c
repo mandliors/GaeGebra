@@ -1,5 +1,7 @@
 #include "intersection.h"
 
+#define EPSILON 0.0001
+
 static Intersection _line_line_intersection(Line* line1, Line* line2);
 static Intersection _line_circle_intersection(Line* line, Circle* circle);
 static Intersection _circle_circle_intersection(Circle* circle1, Circle* circle2);
@@ -66,9 +68,6 @@ static Intersection _line_line_intersection(Line* line1, Line* line2)
     double c2 = vector2_dot(normal2, line2->p1->coordinates);
     double x, y;
 
-    if (vector2_dot(normal1, normal2) == 0)
-        return (Intersection){ NULL, NULL, NULL };
-    
     if (_equals(normal1.y, 0.0))
     {
         if (_equals(normal2.y, 0.0))

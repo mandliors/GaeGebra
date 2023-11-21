@@ -3,8 +3,6 @@
 #include "../shape/shape.h"
 #include "../../utils/vector/vector.h"
 
-#define EPSILON 0.0001
-
 typedef struct Intersection
 {
     Vector* points;

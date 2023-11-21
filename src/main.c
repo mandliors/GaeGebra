@@ -92,9 +92,9 @@ int main(void)
     UIContainer* save_menu = ui_create_container(save_container, constraints_from_string("c c 0.3r 200p"), NULL);
     ui_create_panel(save_menu, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), BLACK, 2, 0);
     ui_create_label(save_menu, constraints_from_string("0.05r 15p 0.9r 80p"), "Save As:", BLACK);
-    ui_create_textbox(save_menu, constraints_from_string("c 15o 0.9r 60p"), "project.gae", WHITE, BLACK, NULL);
-    ui_create_button(save_menu, constraints_from_string("0.05r 15o 0.44r 50p"), "Save", color_from_grayscale(80), WHITE, on_save_button_clicked);
-    ui_create_button(save_menu, constraints_from_string("0.51r -50o 0.44r 50p"), "Cancel", color_from_grayscale(80), WHITE, on_cancel_button_clicked);
+    ui_create_textbox(save_menu, constraints_from_string("c 15o 0.9r 60p"), "project", WHITE, BLACK, NULL);
+    ui_create_button(save_menu, constraints_from_string("0.05r 15o 0.44r 50p"), "Cancel", color_from_grayscale(80), WHITE, on_cancel_button_clicked);
+    ui_create_button(save_menu, constraints_from_string("0.51r -50o 0.44r 50p"), "Save", color_from_grayscale(80), WHITE, on_save_button_clicked);
     ui_hide_element((UIElement*)save_container);
 
     UIContainer* open_container = ui_create_container(window_get_main_container(window), constraints_from_string("0p 0p 1r 1r"), NULL);
@@ -102,12 +102,12 @@ int main(void)
     UIContainer* open_menu = ui_create_container(open_container, constraints_from_string("c c 0.3r 200p"), NULL);
     ui_create_panel(open_menu, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), BLACK, 2, 0);
     ui_create_label(open_menu, constraints_from_string("0.05r 15p 0.9r 80p"), "Open:", BLACK);
-    ui_create_textbox(open_menu, constraints_from_string("c 15o 0.9r 60p"), "project.gae", WHITE, BLACK, NULL);
-    ui_create_button(open_menu, constraints_from_string("0.05r 15o 0.44r 50p"), "Open", color_from_grayscale(80), WHITE, on_open_button_clicked);
-    ui_create_button(open_menu, constraints_from_string("0.51r -50o 0.44r 50p"), "Cancel", color_from_grayscale(80), WHITE, on_cancel_button_clicked);
+    ui_create_textbox(open_menu, constraints_from_string("c 15o 0.9r 60p"), "project", WHITE, BLACK, NULL);
+    ui_create_button(open_menu, constraints_from_string("0.05r 15o 0.44r 50p"), "Cancel", color_from_grayscale(80), WHITE, on_cancel_button_clicked);
+    ui_create_button(open_menu, constraints_from_string("0.51r -50o 0.44r 50p"), "Open", color_from_grayscale(80), WHITE, on_open_button_clicked);
     ui_hide_element((UIElement*)open_container);
 
-    UIContainer* canvas = ui_create_container(main_container, constraints_from_string("0p 90p 1r -100p"), on_canvas_size_changed);
+    UIContainer* canvas = ui_create_container(main_container, constraints_from_string("0p 80p 1r -80p"), on_canvas_size_changed);
     cs = coordinate_system_create(vector2_create(canvas->base.position.x, canvas->base.position.y),
                                   vector2_create(canvas->base.size.x, canvas->base.size.y),
                                   vector2_create(0.5, 0.5));
@@ -308,7 +308,13 @@ void on_circle_clicked(UIButton* self __attribute__((unused)))
 
 void on_open_button_clicked(UIButton* self)
 {
-    CoordinateSystem* new_cs = coordinate_system_load(((UITextbox*)vector_get(((UIContainer*)self->base.parent)->children, 2))->text);
+    char* path = ((UITextbox*)vector_get(((UIContainer*)self->base.parent)->children, 2))->text;
+    char* extension = ".gae";
+    char* new_path = malloc(strlen(path) + strlen(extension) + 1);
+    strcpy(new_path, path);
+    strcat(new_path, extension);
+
+    CoordinateSystem* new_cs = coordinate_system_load(new_path);
     new_cs->position = cs->position;
     new_cs->size = cs->size;
     new_cs->origin = vector2_create(0.5, 0.5);
@@ -316,12 +322,22 @@ void on_open_button_clicked(UIButton* self)
     cs = new_cs;
     ui_hide_element((UIElement*)self->base.parent->parent);
     state = STATE_POINTER;
+
+    free(new_path);
 }
 void on_save_button_clicked(UIButton* self)
 {
-    coordinate_system_save(cs, (((UITextbox*)vector_get(((UIContainer*)self->base.parent)->children, 2))->text));
+    char* path = ((UITextbox*)vector_get(((UIContainer*)self->base.parent)->children, 2))->text;
+    char* extension = ".gae";
+    char* new_path = malloc(strlen(path) + strlen(extension) + 1);
+    strcpy(new_path, path);
+    strcat(new_path, extension);
+
+    coordinate_system_save(cs, new_path);
     ui_hide_element((UIElement*)self->base.parent->parent);
     state = STATE_POINTER;
+
+    free(new_path);
 }
 void on_cancel_button_clicked(UIButton* self)
 {

@@ -6,6 +6,8 @@
 
 #include <math.h>
 
+#define EPSILON 0.0001
+
 static void _point_draw(CoordinateSystem* cs, Shape* self);
 static void _line_draw(CoordinateSystem* cs, Shape* self);
 static void _circle_draw(CoordinateSystem* cs, Shape* self);
@@ -26,7 +28,8 @@ static bool _point_is_defined_by(Shape* self, Shape* shape);
 static bool _line_is_defined_by(Shape* self, Shape* shape);
 static bool _circle_is_defined_by(Shape* self, Shape* shape);
 
-//static void _remove_shape(CoordinateSystem* cs, Shape* shape);
+static bool _equals(double a, double b);
+static Vector2 _line_line_intersection(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3);
 
 ShapeDraw shape_draw_funcs[ST_COUNT] = {_point_draw, _line_draw, _circle_draw};
 ShapeTranslate shape_translate_funcs[ST_COUNT] = {_point_translate, _line_translate, _circle_translate};
@@ -114,16 +117,65 @@ static void _point_draw(CoordinateSystem* cs, Shape* self)
 }
 static void _line_draw(CoordinateSystem* cs, Shape* self)
 {
+    //also check if the intersection is between the endpoints
     Line* line = (Line*)self;
-    Vector2 p1 = coordinates_to_screen(cs, line->p1->coordinates);
-    Vector2 p2 = coordinates_to_screen(cs, line->p2->coordinates);
-    Vector2 dir = vector2_normalize(vector2_subtract(p2, p1));
-    double scale = fmax(cs->position.x + cs->size.x, cs->position.y + cs->size.y);
-    Vector2 p1_translated = vector2_add(p1, vector2_scale(dir, -scale));
-    Vector2 p2_translated = vector2_add(p2, vector2_scale(dir,  scale));
-    if (self->selected)
-        renderer_draw_line(p1_translated.x, p1_translated.y, p2_translated.x, p2_translated.y, 6, color_fade(BLACK, 0.3));
-    renderer_draw_line(p1_translated.x, p1_translated.y, p2_translated.x, p2_translated.y, 2, BLACK);
+
+    Vector2 m1 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y }, (Vector2){ cs->position.x, cs->position.y + cs->size.y },
+                                        coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
+    Vector2 m2 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y },
+                                    coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
+    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y &&
+        !isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x)
+    {
+        if (self->selected)
+            renderer_draw_line(m1.x, m1.y, m2.x, m2.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m1.x, m1.y, m2.x, m2.y, 2, BLACK);
+        return;
+    }
+    Vector2 m3 = _line_line_intersection((Vector2){ cs->position.x + cs->size.x, cs->position.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y + cs->size.y },
+                                        coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
+    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y && 
+        !isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y)
+    {
+        if (self->selected)
+            renderer_draw_line(m1.x, m1.y, m3.x, m3.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m1.x, m1.y, m3.x, m3.y, 2, BLACK);
+        return;
+    }
+    else if (!isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x &&
+             !isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y)
+    {
+        if (self->selected)
+            renderer_draw_line(m2.x, m2.y, m3.x, m3.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m2.x, m2.y, m3.x, m3.y, 2, BLACK);
+        return;
+    }
+    Vector2 m4 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y + cs->size.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y + cs->size.y },
+                                            coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
+    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y &&
+        !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
+    {
+        if (self->selected)
+            renderer_draw_line(m1.x, m1.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m1.x, m1.y, m4.x, m4.y, 2, BLACK);
+        return;
+    }
+    else if (!isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x &&
+             !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
+    {
+        if (self->selected)
+            renderer_draw_line(m2.x, m2.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m2.x, m2.y, m4.x, m4.y, 2, BLACK);
+        return;
+    }
+    else if (!isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y &&
+             !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
+    {
+        if (self->selected)
+            renderer_draw_line(m3.x, m3.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m3.x, m3.y, m4.x, m4.y, 2, BLACK);
+        return;
+    }
 }
 static void _circle_draw(CoordinateSystem* cs, Shape* self)
 {
@@ -187,4 +239,40 @@ static bool _line_is_defined_by(Shape* self, Shape* shape)
 static bool _circle_is_defined_by(Shape* self, Shape* shape)
 {
     return (Shape*)((Circle*)self)->center == shape || (Shape*)((Circle*)self)->perimeter_point == shape;
+}
+
+static bool _equals(double a, double b)
+{
+    return fabs(a - b) < EPSILON;
+}
+static Vector2 _line_line_intersection(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+{
+    //My method
+    Vector2 normal1 = vector2_rotate90(vector2_subtract(p1, p0));
+    Vector2 normal2 = vector2_rotate90(vector2_subtract(p3, p2));
+    double c1 = vector2_dot(normal1, p0);
+    double c2 = vector2_dot(normal2, p2);
+    double x, y;
+    
+    if (_equals(normal1.y, 0.0))
+    {
+        if (_equals(normal2.y, 0.0))
+            return (Vector2){ NAN, NAN };
+        x = c1 / normal1.x;
+        y = (c2 - normal2.x * x) / normal2.y;
+    }
+    else if (_equals(normal2.y, 0.0))
+    {
+        x = c2 / normal2.x;
+        y = (c1 - normal1.x * x) / normal1.y;
+    }
+    else
+    {
+        x = (normal2.y * c1 / normal1.y - c2) / (normal1.x * normal2.y / normal1.y - normal2.x);
+        if (!_equals(normal1.y, 0.0))
+            y = (c1 - normal1.x * x) / normal1.y;
+        else
+            y = (c2 - normal2.x * x) / normal2.y;
+    }
+    return vector2_create(x, y);
 }
