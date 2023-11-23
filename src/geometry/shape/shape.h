@@ -27,6 +27,7 @@ typedef struct Shape
 {
     ShapeType type;
     bool selected;
+    bool dragged;
 } Shape;
 
 typedef struct Point

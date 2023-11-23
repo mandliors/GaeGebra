@@ -42,6 +42,7 @@ Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
     Point* point = malloc(sizeof(Point));
     point->base.type = ST_POINT;
     point->base.selected = false;
+    point->base.dragged = false;
     point->coordinates = coordinates;
     vector_push_back(cs->shapes, point);
     return point;
@@ -51,6 +52,7 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2)
     Line* line = malloc(sizeof(Line));
     line->base.type = ST_LINE;
     line->base.selected = false;
+    line->base.dragged = false;
     line->p1 = p1;
     line->p2 = p2;
     vector_push_back(cs->shapes, line);
@@ -61,6 +63,7 @@ Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_poin
     Circle* circle = malloc(sizeof(Circle));
     circle->base.type = ST_CIRCLE;
     circle->base.selected = false;
+    circle->base.dragged = false;
     circle->center = center;
     circle->perimeter_point = perimeter_point;
     vector_push_back(cs->shapes, circle);
@@ -73,7 +76,7 @@ void shape_draw(CoordinateSystem* cs, Shape* self)
 }
 void shape_update(CoordinateSystem* cs, Shape* self)
 {
-    if (cs->dragged_shape == self)
+    if (self->dragged)
         shape_translate(cs, self, vector2_from_point(input_get_mouse_motion()));
 }
 void shape_translate(CoordinateSystem* cs, Shape* self, Vector2 translation)
@@ -197,14 +200,14 @@ static void _point_translate(CoordinateSystem* cs, Shape* self, Vector2 translat
 static void _line_translate(CoordinateSystem* cs, Shape* self, Vector2 translation)
 {       
     Line* line = (Line*)self;
-    _point_translate(cs, (Shape*)line->p1, translation);
-    _point_translate(cs, (Shape*)line->p2, translation);
+    if (!((Shape*)line->p1)->dragged) _point_translate(cs, (Shape*)line->p1, translation);
+    if (!((Shape*)line->p2)->dragged) _point_translate(cs, (Shape*)line->p2, translation);
 }
 static void _circle_translate(CoordinateSystem* cs, Shape* self, Vector2 translation)
 {
     Circle* circle = (Circle*)self;
-    _point_translate(cs, (Shape*)circle->center, translation);
-    _point_translate(cs, (Shape*)circle->perimeter_point, translation);
+    if (!((Shape*)circle->center)->dragged) _point_translate(cs, (Shape*)circle->center, translation);
+    if (!((Shape*)circle->perimeter_point)->dragged) _point_translate(cs, (Shape*)circle->perimeter_point, translation);
 }
 
 static bool _point_overlap(CoordinateSystem* cs, Shape* self, Vector2 point)

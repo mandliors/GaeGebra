@@ -21,7 +21,6 @@ CoordinateSystem* coordinate_system_create(Vector2 position, Vector2 size, Vecto
     cs->zoom = INITIAL_ZOOM;
     cs->shapes = vector_create(0);
     cs->intersection_points = vector_create(0);
-    cs->dragged_shape = NULL;
     return cs;
 }
 void coordinate_system_clear(CoordinateSystem* cs)
@@ -95,7 +94,10 @@ CoordinateSystem* coordinate_system_load(const char* path)
     CoordinateSystem* cs = coordinate_system_create(vector2_create(0, 0), vector2_create(0, 0), vector2_create(0.5, 0.5));
     FILE* file = fopen(path, "r");
     if (file == NULL)
-        return cs;
+    {
+        free(cs);
+        return NULL;
+    }
     char buffer[256];
     while (fgets(buffer, 256, file) != NULL)
     {
@@ -151,13 +153,34 @@ void coordinate_system_select_shape(CoordinateSystem* cs, Shape* shape)
     if (cs == NULL || shape == NULL)
         return;
     shape->selected = true;
-
 }
-void coordinate_system_set_dragged_shape(CoordinateSystem* cs, Shape* shape)
+void coordinate_system_deselect_shape(CoordinateSystem* cs, Shape* shape)
+{
+    if (cs == NULL || shape == NULL)
+        return;
+    shape->selected = false;
+}
+void coordinate_system_select_all_shapes(CoordinateSystem* cs)
 {
     if (cs == NULL)
         return;
-    cs->dragged_shape = shape;
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        Shape* shape = vector_get(cs->shapes, i);
+        shape->selected = true;
+    }
+}
+void coordinate_system_drag_selected_shapes(CoordinateSystem* cs, bool drag)
+{
+    if (cs == NULL)
+        return;
+
+    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    {
+        Shape* shape = vector_get(cs->shapes, i);
+        if (shape->selected)
+            shape->dragged = drag;
+    }
 }
 Shape* coordinate_system_get_hovered_shape(CoordinateSystem* cs, Vector2 point)
 {
@@ -188,10 +211,6 @@ Vector* coordinate_system_get_selected_shapes(CoordinateSystem* cs)
     }
     return shapes;
 }
-Shape* coordinate_system_get_dragged_shape(CoordinateSystem* cs)
-{
-    return cs->dragged_shape;
-}
 void coordinate_system_deselect_shapes(CoordinateSystem* cs)
 {
     if (cs == NULL)
@@ -207,11 +226,14 @@ void coordinate_system_delete_selected_shapes(CoordinateSystem* cs)
 {
     if (cs == NULL)
         return;
-    for (size_t i = 0; i < vector_size(cs->shapes); i++)
+    for (int32_t i = 0; i < (int32_t)vector_size(cs->shapes); i++)
     {
         Shape* shape = vector_get(cs->shapes, i);
         if (shape->selected)
+        {
             coordinate_system_destroy_shape(cs, shape);
+            i = -1;
+        }
     }
 }
 void coordinate_system_translate(CoordinateSystem* cs, Vector2 translation)
