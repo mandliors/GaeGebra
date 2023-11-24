@@ -85,7 +85,7 @@ void app_close()
         _window_close(window);
         free(window);
     }
-    vector_free(app_data.windows);
+    vector_destroy(app_data.windows);
     TTF_Quit();
     SDL_Quit();
 }

@@ -43,13 +43,13 @@ void coordinate_system_destroy(CoordinateSystem* cs)
         Shape* intersection_point = vector_get(cs->intersection_points, i);
         shape_destroy(cs, intersection_point);
     }
-    vector_free(cs->intersection_points);
+    vector_destroy(cs->intersection_points);
     while (vector_size(cs->shapes) > 0)
     {
         Shape* shape = vector_get(cs->shapes, 0);
         coordinate_system_destroy_shape(cs, shape);
     }
-    vector_free(cs->shapes);
+    vector_destroy(cs->shapes);
     free(cs);
 }
 
@@ -266,11 +266,11 @@ void coordinate_system_update(CoordinateSystem* cs)
         for (size_t j = i + 1; j < vector_size(cs->shapes); j++)
         {
             Shape* shape2 = vector_get(cs->shapes, j);
-            Intersection intersection = intersection_get(shape1, shape2);
-            if (intersection.points != NULL)
-                for (size_t i = 0; i < vector_size(intersection.points); i++)
-                    _intersection_point_create(cs, *(Vector2*)vector_get(intersection.points, i));
-            intersection_destroy(&intersection);
+            Vector* intersections = intersection_get(shape1, shape2);
+            if (intersections != NULL)
+                for (size_t i = 0; i < vector_size(intersections); i++)
+                    _intersection_point_create(cs, *(Vector2*)vector_get(intersections, i));
+            vector_destroy(intersections);
         }
     }
 }

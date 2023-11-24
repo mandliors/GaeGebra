@@ -34,5 +34,5 @@ void _texture_close()
 		SDL_DestroyTexture(texture->texture);
 		free(texture);
 	}
-	vector_free(textures);
+	vector_destroy(textures);
 }

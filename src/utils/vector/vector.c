@@ -28,7 +28,7 @@ Vector* vector_create(size_t capacity)
 	}
 	return vector;
 }
-void vector_free(Vector* vector)
+void vector_destroy(Vector* vector)
 {
 	if (vector == NULL)
 		return;

@@ -22,6 +22,9 @@ typedef enum ShapeType
     ST_CIRCLE,
     
     ST_PARALLEL,
+    ST_PERPENDICULAR,
+    ST_ANGLE_BISECTOR,
+    ST_TANGENT,
 
     ST_COUNT
 } ShapeType;
@@ -59,6 +62,27 @@ typedef struct Parallel
     Point* point;
 } Parallel;
 
+typedef struct Perpendicular
+{
+    Shape base;
+    Line* line;
+    Point* point;
+} Perpendicular;
+
+typedef struct AngleBisector
+{
+    Shape base;
+    Line* line1;
+    Line* line2;
+} AngleBisector;
+
+typedef struct Tangent
+{
+    Shape base;
+    Circle* circle;
+    Point* point;
+} Tangent;
+
 /**
  * @brief Creates a point in the coordinate system
  * 
@@ -89,11 +113,38 @@ Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_poin
  * @brief Creates a parallel line in the coordinate system
  * 
  * @param cs The coordinate system to create the parallel line in
- * @param line The line to create the parallel line with
- * @param point The point to the parallel line goes through
+ * @param line The line to create the parallel line to
+ * @param point The point the parallel line goes through
  * @return Parallel* The created parallel line
  */
 Parallel* parallel_create(CoordinateSystem* cs, Line* line, Point* point);
+/**
+ * @brief Creates a perpendicular line in the coordinate system
+ * 
+ * @param cs The coordinate system to create the perpendicular line in
+ * @param line The line to create the perpendicular line to
+ * @param point The point the perpendicular line goes through
+ * @return Perpendicular* The created perpendicular line
+ */
+Perpendicular* perpendicular_create(CoordinateSystem* cs, Line* line, Point* point);
+/**
+ * @brief Creates an angle bisector in the coordinate system
+ * 
+ * @param cs The coordinate system to create the angle bisector in
+ * @param line1 The first line to create the angle bisector to
+ * @param line2 The second line to create the angle bisector to
+ * @return AngleBisector* The created angle bisector
+ */
+AngleBisector* angle_bisector_create(CoordinateSystem* cs, Line* line1, Line* line2);
+/**
+ * @brief Creates a tangent to a circle in the coordinate system
+ * 
+ * @param cs The coordinate system to create the tangent in
+ * @param circle The circle to create the tangent to
+ * @param point The point the tangent goes through
+ * @return Tangent* The created tangent
+ */
+Tangent* tangent_create(CoordinateSystem* cs, Circle* circle, Point* point);
 
 void shape_draw(CoordinateSystem* cs, Shape* self);
 void shape_update(CoordinateSystem* cs, Shape* self);

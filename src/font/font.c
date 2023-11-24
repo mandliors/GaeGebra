@@ -34,5 +34,5 @@ void _font_close()
 		TTF_CloseFont(font->font);
 		free(font);
 	}
-	vector_free(fonts);
+	vector_destroy(fonts);
 }

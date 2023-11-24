@@ -542,7 +542,7 @@ void _ui_container_destroy(UIElement* self)
         UIElement* child = (UIElement*)vector_get(container->children, i);
         child->destroy(child);
     }
-    vector_free(container->children);
+    vector_destroy(container->children);
     free(container);
 }
 
@@ -1035,7 +1035,7 @@ static void _ui_dropdown_destroy(UIElement* self)
         UIElement* item = (UIElement*)vector_get(dropdown->items, i);
         item->destroy(item);
     }
-    vector_free(dropdown->items);
+    vector_destroy(dropdown->items);
     free(dropdown);
 }
 
@@ -1190,7 +1190,7 @@ static void _ui_splitbutton_destroy(UIElement* self)
         UIElement* item = (UIElement*)vector_get(splitbutton->items, i);
         item->destroy(item);
     }
-    vector_free(splitbutton->items);
+    vector_destroy(splitbutton->items);
     free(splitbutton);
 }
 

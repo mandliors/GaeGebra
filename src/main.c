@@ -30,8 +30,11 @@
 void on_pointer_clicked(UIButton* self);
 void on_point_clicked(UIButton* self);
 void on_line_clicked(UIButton* self);
-void on_parallel_clicked(UIButton* self);
 void on_circle_clicked(UIButton* self);
+void on_parallel_clicked(UIButton* self);
+void on_perpendicular_clicked(UIButton* self);
+void on_angle_bisector_clicked(UIButton* self);
+void on_tangent_clicked(UIButton* self);
 
 void on_open_button_clicked(UIButton* self);
 void on_save_button_clicked(UIButton* self);
@@ -56,6 +59,15 @@ typedef enum State
 
     STATE_PARALLEL,
     STATE_PARALLEL_LINE_SELECTED,
+
+    STATE_PERPENDICULAR,
+    STATE_PERPENDICULAR_LINE_SELECTED,
+
+    STATE_ANGLE_BISECTOR,
+    STATE_ANGLE_BISECTOR_LINE1_SELECTED,
+
+    STATE_TANGENT,
+    STATE_TANGENT_LINE_SELECTED,
 
     STATE_OPENING,
     STATE_SAVEING
@@ -82,10 +94,13 @@ int main(void)
     UIContainer* toolbar = ui_create_container(main_container, constraints_from_string("0p 30p 1r 50p"), NULL);
     ui_create_panel(toolbar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(40), WHITE, 0, 0);
     ui_create_button(toolbar, constraints_from_string("10p c 100p 0.8r"), "Pointer", color_from_grayscale(80), WHITE, on_pointer_clicked);
-    ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Point", color_from_grayscale(80), WHITE, on_point_clicked);
-    ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Line", color_from_grayscale(80), WHITE, on_line_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 80p 0.8r"), "Point", color_from_grayscale(80), WHITE, on_point_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 70p 0.8r"), "Line", color_from_grayscale(80), WHITE, on_line_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 90p 0.8r"), "Circle", color_from_grayscale(80), WHITE, on_circle_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Parallel", color_from_grayscale(80), WHITE, on_parallel_clicked);
-    ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Circle", color_from_grayscale(80), WHITE, on_circle_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 130p 0.8r"), "Perpendicular", color_from_grayscale(80), WHITE, on_perpendicular_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 140p 0.8r"), "Angle Bisector", color_from_grayscale(80), WHITE, on_angle_bisector_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 110p 0.8r"), "Tangent", color_from_grayscale(80), WHITE, on_tangent_clicked);
     
     UIContainer* menubar = ui_create_container(main_container, constraints_from_string("0p 0p 1r 30p"), NULL);
     ui_create_panel(menubar, constraints_from_string("0p 0p 1r 1r"), color_from_grayscale(200), WHITE, 0, 0);
@@ -198,7 +213,7 @@ int main(void)
             {
                 Vector* shapes = coordinate_system_get_selected_shapes(cs);
                 Point* first_point = (Point*)vector_get(shapes, 0);
-                vector_free(shapes);
+                vector_destroy(shapes);
                 coordinate_system_drag_selected_shapes(cs, false);
                 coordinate_system_deselect_shapes(cs);
                 Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
@@ -265,7 +280,7 @@ int main(void)
             {
                 Vector* shapes = coordinate_system_get_selected_shapes(cs);
                 Point* first_point = (Point*)vector_get(shapes, 0);
-                vector_free(shapes);
+                vector_destroy(shapes);
                 coordinate_system_drag_selected_shapes(cs, false);
                 coordinate_system_deselect_shapes(cs);
                 Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
@@ -325,7 +340,9 @@ int main(void)
             {
                 Vector* shapes = coordinate_system_get_selected_shapes(cs);
                 Line* line = (Line*)vector_get(shapes, 0);
-                vector_free(shapes);
+                vector_destroy(shapes);
+                if (line == NULL || line->base.type != ST_LINE)
+                    break;
                 coordinate_system_drag_selected_shapes(cs, false);
                 coordinate_system_deselect_shapes(cs);
                 Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
@@ -367,6 +384,180 @@ int main(void)
                 shape_destroy(cs, vector_pop_back(cs->shapes));
                 coordinate_system_deselect_shapes(cs);
                 state = STATE_PARALLEL;
+            }
+            break;
+
+        case STATE_PERPENDICULAR:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_LINE)
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, (Shape*)hovered_shape);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Vector* shapes = coordinate_system_get_selected_shapes(cs);
+                Line* line = (Line*)vector_get(shapes, 0);
+                vector_destroy(shapes);
+                if (line == NULL || line->base.type != ST_LINE)
+                    break;
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                perpendicular_create(cs, line, (Point*)placing_point);
+                coordinate_system_select_shape(cs, (Shape*)placing_point);
+                coordinate_system_drag_selected_shapes(cs, true);
+                state = STATE_PERPENDICULAR_LINE_SELECTED;
+            }
+            break;
+        case STATE_PERPENDICULAR_LINE_SELECTED:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && !hovered_shape->dragged && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_drag_selected_shapes(cs, false);
+                    coordinate_system_deselect_shapes(cs);
+                    Perpendicular* perpendicular = (Perpendicular*)vector_get(cs->shapes, vector_size(cs->shapes) - 1);
+                    perpendicular->point = (Point*)hovered_shape;
+                    coordinate_system_destroy_shape(cs, vector_get(cs->shapes, vector_size(cs->shapes) - 2));
+                }
+                else
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                    coordinate_system_select_shape(cs, (Shape*)placing_point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+            {
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_PERPENDICULAR;
+            }
+            else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
+            {
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_PERPENDICULAR;
+            }
+            break;
+
+        case STATE_ANGLE_BISECTOR:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_LINE)
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, (Shape*)hovered_shape);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Vector* shapes = coordinate_system_get_selected_shapes(cs);
+                Line* line = (Line*)vector_get(shapes, 0);
+                vector_destroy(shapes);
+                if (line == NULL || line->base.type != ST_LINE)
+                    break;
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                angle_bisector_create(cs, line, NULL);
+                state = STATE_ANGLE_BISECTOR_LINE1_SELECTED;
+            }
+            break;
+        case STATE_ANGLE_BISECTOR_LINE1_SELECTED:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_LINE)
+                {
+                    coordinate_system_drag_selected_shapes(cs, false);
+                    coordinate_system_deselect_shapes(cs);
+                    AngleBisector* angle_bisector = (AngleBisector*)vector_get(cs->shapes, vector_size(cs->shapes) - 1);
+                    angle_bisector->line2 = (Line*)hovered_shape;
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+            {
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_PERPENDICULAR;
+            }
+            else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
+            {
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_PERPENDICULAR;
+            }
+            break;
+        
+        case STATE_TANGENT:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_CIRCLE)
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, (Shape*)hovered_shape);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Vector* shapes = coordinate_system_get_selected_shapes(cs);
+                Circle* circle = (Circle*)vector_get(shapes, 0);
+                vector_destroy(shapes);
+                if (circle == NULL || circle->base.type != ST_CIRCLE)
+                    break;
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                tangent_create(cs, circle, (Point*)placing_point);
+                coordinate_system_select_shape(cs, (Shape*)placing_point);
+                coordinate_system_drag_selected_shapes(cs, true);
+                state = STATE_TANGENT_LINE_SELECTED;
+            }
+            break;
+        case STATE_TANGENT_LINE_SELECTED:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && !hovered_shape->dragged && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_drag_selected_shapes(cs, false);
+                    coordinate_system_deselect_shapes(cs);
+                    Tangent* tangent = (Tangent*)vector_get(cs->shapes, vector_size(cs->shapes) - 1);
+                    tangent->point = (Point*)hovered_shape;
+                    coordinate_system_destroy_shape(cs, vector_get(cs->shapes, vector_size(cs->shapes) - 2));
+                }
+                else
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                    coordinate_system_select_shape(cs, (Shape*)placing_point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+            {
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_TANGENT;
+            }
+            else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
+            {
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_TANGENT;
             }
             break;
 
@@ -441,13 +632,25 @@ void on_line_clicked(UIButton* self __attribute__((unused)))
 {
     state = STATE_LINE;
 }
+void on_circle_clicked(UIButton* self __attribute__((unused)))
+{
+    state = STATE_CIRCLE;
+}
 void on_parallel_clicked(UIButton* self __attribute__((unused)))
 {
     state = STATE_PARALLEL;
 }
-void on_circle_clicked(UIButton* self __attribute__((unused)))
+void on_perpendicular_clicked(UIButton* self __attribute__((unused)))
 {
-    state = STATE_CIRCLE;
+    state = STATE_PERPENDICULAR;
+}
+void on_angle_bisector_clicked(UIButton* self __attribute__((unused)))
+{
+    state = STATE_ANGLE_BISECTOR;
+}
+void on_tangent_clicked(UIButton* self __attribute__((unused)))
+{
+    state = STATE_TANGENT;
 }
 
 void on_open_button_clicked(UIButton* self)

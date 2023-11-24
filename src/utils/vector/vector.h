@@ -10,7 +10,7 @@ typedef struct Vector {
 } Vector;
 
 Vector* vector_create(size_t capacity);
-void vector_free(Vector* vector);
+void vector_destroy(Vector* vector);
 void* vector_get(Vector* vector, size_t idx);
 void vector_push_back(Vector* vector, void* value);
 void* vector_pop_back(Vector* vector);
