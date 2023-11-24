@@ -11,31 +11,37 @@
 static void _point_draw(CoordinateSystem* cs, Shape* self);
 static void _line_draw(CoordinateSystem* cs, Shape* self);
 static void _circle_draw(CoordinateSystem* cs, Shape* self);
+static void _parallel_draw(CoordinateSystem* cs, Shape* self);
 
 static void _point_translate(CoordinateSystem* cs, Shape* self, Vector2 translation);
 static void _line_translate(CoordinateSystem* cs, Shape* self, Vector2 translation);
 static void _circle_translate(CoordinateSystem* cs, Shape* self, Vector2 translation);
+static void _parallel_translate(CoordinateSystem* cs, Shape* self, Vector2 translation);
 
 static void _point_destroy(CoordinateSystem* cs, Shape* self);
 static void _line_destroy(CoordinateSystem* cs, Shape* self);
 static void _circle_destroy(CoordinateSystem* cs, Shape* self);
+static void _parallel_destroy(CoordinateSystem* cs, Shape* self);
 
 static bool _point_overlap(CoordinateSystem* cs, Shape* self, Vector2 point);
 static bool _line_overlap(CoordinateSystem* cs, Shape* self, Vector2 point);
 static bool _circle_overlap(CoordinateSystem* cs, Shape* self, Vector2 point);
+static bool _parallel_overlap(CoordinateSystem* cs, Shape* self, Vector2 point);
 
 static bool _point_is_defined_by(Shape* self, Shape* shape);
 static bool _line_is_defined_by(Shape* self, Shape* shape);
 static bool _circle_is_defined_by(Shape* self, Shape* shape);
+static bool _parallel_is_defined_by(Shape* self, Shape* shape);
 
 static bool _equals(double a, double b);
 static Vector2 _line_line_intersection(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3);
+static void _draw_line_on_screen(CoordinateSystem* cs, Vector2 p1, Vector2 p2, bool selected);
 
-ShapeDraw shape_draw_funcs[ST_COUNT] = {_point_draw, _line_draw, _circle_draw};
-ShapeTranslate shape_translate_funcs[ST_COUNT] = {_point_translate, _line_translate, _circle_translate};
-ShapeDestroy shape_destroy_funcs[ST_COUNT] = {_point_destroy, _line_destroy, _circle_destroy};
-ShapeOverlapPoint shape_overlap_point_funcs[ST_COUNT] = {_point_overlap, _line_overlap, _circle_overlap};
-ShapeIsDefinedBy shape_is_defined_by_funcs[ST_COUNT] = {_point_is_defined_by, _line_is_defined_by, _circle_is_defined_by};
+ShapeDraw shape_draw_funcs[ST_COUNT] = {_point_draw, _line_draw, _circle_draw, _parallel_draw};
+ShapeTranslate shape_translate_funcs[ST_COUNT] = {_point_translate, _line_translate, _circle_translate, _parallel_translate};
+ShapeDestroy shape_destroy_funcs[ST_COUNT] = {_point_destroy, _line_destroy, _circle_destroy, _parallel_destroy};
+ShapeOverlapPoint shape_overlap_point_funcs[ST_COUNT] = {_point_overlap, _line_overlap, _circle_overlap, _parallel_overlap};
+ShapeIsDefinedBy shape_is_defined_by_funcs[ST_COUNT] = {_point_is_defined_by, _line_is_defined_by, _circle_is_defined_by, _parallel_is_defined_by};
 
 Point* point_create(CoordinateSystem* cs, Vector2 coordinates)
 {
@@ -68,6 +74,17 @@ Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_poin
     circle->perimeter_point = perimeter_point;
     vector_push_back(cs->shapes, circle);
     return circle;
+}
+Parallel* parallel_create(CoordinateSystem* cs, Line* line, Point* point)
+{
+    Parallel* parallel = malloc(sizeof(Parallel));
+    parallel->base.type = ST_PARALLEL;
+    parallel->base.selected = false;
+    parallel->base.dragged = false;
+    parallel->line = line;
+    parallel->point = point;
+    vector_push_back(cs->shapes, parallel);
+    return parallel;
 }
 
 void shape_draw(CoordinateSystem* cs, Shape* self)
@@ -108,6 +125,10 @@ static void _circle_destroy(CoordinateSystem* cs __attribute__((unused)), Shape*
 {
     free((Circle*)self);
 }
+static void _parallel_destroy(CoordinateSystem* cs __attribute__((unused)), Shape* self)
+{
+    free((Parallel*)self);
+}
 
 static void _point_draw(CoordinateSystem* cs, Shape* self)
 {
@@ -120,65 +141,8 @@ static void _point_draw(CoordinateSystem* cs, Shape* self)
 }
 static void _line_draw(CoordinateSystem* cs, Shape* self)
 {
-    //also check if the intersection is between the endpoints
     Line* line = (Line*)self;
-
-    Vector2 m1 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y }, (Vector2){ cs->position.x, cs->position.y + cs->size.y },
-                                        coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
-    Vector2 m2 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y },
-                                    coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
-    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y &&
-        !isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x)
-    {
-        if (self->selected)
-            renderer_draw_line(m1.x, m1.y, m2.x, m2.y, 6, color_fade(BLACK, 0.3));
-        renderer_draw_line(m1.x, m1.y, m2.x, m2.y, 2, BLACK);
-        return;
-    }
-    Vector2 m3 = _line_line_intersection((Vector2){ cs->position.x + cs->size.x, cs->position.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y + cs->size.y },
-                                        coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
-    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y && 
-        !isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y)
-    {
-        if (self->selected)
-            renderer_draw_line(m1.x, m1.y, m3.x, m3.y, 6, color_fade(BLACK, 0.3));
-        renderer_draw_line(m1.x, m1.y, m3.x, m3.y, 2, BLACK);
-        return;
-    }
-    else if (!isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x &&
-             !isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y)
-    {
-        if (self->selected)
-            renderer_draw_line(m2.x, m2.y, m3.x, m3.y, 6, color_fade(BLACK, 0.3));
-        renderer_draw_line(m2.x, m2.y, m3.x, m3.y, 2, BLACK);
-        return;
-    }
-    Vector2 m4 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y + cs->size.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y + cs->size.y },
-                                            coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates));
-    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y &&
-        !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
-    {
-        if (self->selected)
-            renderer_draw_line(m1.x, m1.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
-        renderer_draw_line(m1.x, m1.y, m4.x, m4.y, 2, BLACK);
-        return;
-    }
-    else if (!isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x &&
-             !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
-    {
-        if (self->selected)
-            renderer_draw_line(m2.x, m2.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
-        renderer_draw_line(m2.x, m2.y, m4.x, m4.y, 2, BLACK);
-        return;
-    }
-    else if (!isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y &&
-             !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
-    {
-        if (self->selected)
-            renderer_draw_line(m3.x, m3.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
-        renderer_draw_line(m3.x, m3.y, m4.x, m4.y, 2, BLACK);
-        return;
-    }
+    _draw_line_on_screen(cs, coordinates_to_screen(cs, line->p1->coordinates), coordinates_to_screen(cs, line->p2->coordinates), self->selected);    
 }
 static void _circle_draw(CoordinateSystem* cs, Shape* self)
 {
@@ -190,6 +154,17 @@ static void _circle_draw(CoordinateSystem* cs, Shape* self)
             renderer_draw_circle(position.x, position.y, r, color_fade(BLACK, 0.3));
     for (size_t r = radius; r < radius + 2; r++)
         renderer_draw_circle(position.x, position.y, r, BLACK);
+}
+static void _parallel_draw(CoordinateSystem* cs, Shape* self)
+{
+    Parallel* parallel = (Parallel*)self;
+    Vector2 p1 = coordinates_to_screen(cs, parallel->line->p1->coordinates);
+    Vector2 p2 = coordinates_to_screen(cs, parallel->line->p2->coordinates);
+    Vector2 pp1 = coordinates_to_screen(cs, parallel->point->coordinates);
+    Vector2 normal = vector2_rotate90(vector2_subtract(p2, p1));
+    Vector2 pp2 = vector2_add(pp1, normal);
+
+    _draw_line_on_screen(cs, pp1, pp2, self->selected);
 }
 
 static void _point_translate(CoordinateSystem* cs, Shape* self, Vector2 translation)
@@ -208,6 +183,10 @@ static void _circle_translate(CoordinateSystem* cs, Shape* self, Vector2 transla
     Circle* circle = (Circle*)self;
     if (!((Shape*)circle->center)->dragged) _point_translate(cs, (Shape*)circle->center, translation);
     if (!((Shape*)circle->perimeter_point)->dragged) _point_translate(cs, (Shape*)circle->perimeter_point, translation);
+}
+static void _parallel_translate(CoordinateSystem* cs __attribute__((unused)), Shape* self __attribute__((unused)), Vector2 translation __attribute__((unused)))
+{
+    return;
 }
 
 static bool _point_overlap(CoordinateSystem* cs, Shape* self, Vector2 point)
@@ -229,6 +208,21 @@ static bool _circle_overlap(CoordinateSystem* cs, Shape* self, Vector2 point)
     double radius = vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), coordinates_to_screen(cs, circle->perimeter_point->coordinates));
     return fabs(vector2_distance(coordinates_to_screen(cs, circle->center->coordinates), point) - radius) <= OVERLAP_DISTANCE;
 }
+static bool _parallel_overlap(CoordinateSystem* cs, Shape* self, Vector2 point)
+{
+    Parallel* parallel = (Parallel*)self;
+    Vector2 p1 = coordinates_to_screen(cs, parallel->line->p1->coordinates);
+    Vector2 p2 = coordinates_to_screen(cs, parallel->line->p2->coordinates);
+    Vector2 pp1 = coordinates_to_screen(cs, parallel->point->coordinates);
+    Vector2 normal = vector2_rotate90(vector2_subtract(p2, p1));
+    Vector2 pp2 = vector2_add(pp1, normal);
+
+    Vector2 screen_normal = vector2_normalize(vector2_rotate90(vector2_subtract(pp1, pp2)));
+    //My method
+    return fabs(vector2_dot(screen_normal, point) - 
+                vector2_dot(screen_normal, pp1))
+                <= vector2_length(screen_normal) * OVERLAP_DISTANCE;
+}
 
 static bool _point_is_defined_by(Shape* self __attribute__((unused)), Shape* shape __attribute__((unused)))
 {
@@ -242,6 +236,11 @@ static bool _line_is_defined_by(Shape* self, Shape* shape)
 static bool _circle_is_defined_by(Shape* self, Shape* shape)
 {
     return (Shape*)((Circle*)self)->center == shape || (Shape*)((Circle*)self)->perimeter_point == shape;
+}
+static bool _parallel_is_defined_by(Shape* self, Shape* shape)
+{
+    Parallel* parallel = (Parallel*)self;
+    return (Shape*)parallel->line == shape || (Shape*)parallel->point == shape;
 }
 
 static bool _equals(double a, double b)
@@ -278,4 +277,59 @@ static Vector2 _line_line_intersection(Vector2 p0, Vector2 p1, Vector2 p2, Vecto
             y = (c2 - normal2.x * x) / normal2.y;
     }
     return vector2_create(x, y);
+}
+static void _draw_line_on_screen(CoordinateSystem* cs, Vector2 p1, Vector2 p2, bool selected)
+{
+    Vector2 m1 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y }, (Vector2){ cs->position.x, cs->position.y + cs->size.y }, p1, p2);
+    Vector2 m2 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y },p1, p2);
+    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y &&
+        !isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x)
+    {
+        if (selected)
+            renderer_draw_line(m1.x, m1.y, m2.x, m2.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m1.x, m1.y, m2.x, m2.y, 2, BLACK);
+        return;
+    }
+    Vector2 m3 = _line_line_intersection((Vector2){ cs->position.x + cs->size.x, cs->position.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y + cs->size.y }, p1, p2);
+    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y && 
+        !isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y)
+    {
+        if (selected)
+            renderer_draw_line(m1.x, m1.y, m3.x, m3.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m1.x, m1.y, m3.x, m3.y, 2, BLACK);
+        return;
+    }
+    else if (!isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x &&
+             !isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y)
+    {
+        if (selected)
+            renderer_draw_line(m2.x, m2.y, m3.x, m3.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m2.x, m2.y, m3.x, m3.y, 2, BLACK);
+        return;
+    }
+    Vector2 m4 = _line_line_intersection((Vector2){ cs->position.x, cs->position.y + cs->size.y }, (Vector2){ cs->position.x + cs->size.x, cs->position.y + cs->size.y }, p1, p2);
+    if (!isnan(m1.x) && cs->position.y <= m1.y && m1.y <= cs->position.y + cs->size.y &&
+        !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
+    {
+        if (selected)
+            renderer_draw_line(m1.x, m1.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m1.x, m1.y, m4.x, m4.y, 2, BLACK);
+        return;
+    }
+    else if (!isnan(m2.x) && cs->position.x <= m2.x && m2.x <= cs->position.x + cs->size.x &&
+             !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
+    {
+        if (selected)
+            renderer_draw_line(m2.x, m2.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m2.x, m2.y, m4.x, m4.y, 2, BLACK);
+        return;
+    }
+    else if (!isnan(m3.x) && cs->position.y <= m3.y && m3.y <= cs->position.y + cs->size.y &&
+             !isnan(m4.x) && cs->position.x <= m4.x && m4.x <= cs->position.x + cs->size.x)
+    {
+        if (selected)
+            renderer_draw_line(m3.x, m3.y, m4.x, m4.y, 6, color_fade(BLACK, 0.3));
+        renderer_draw_line(m3.x, m3.y, m4.x, m4.y, 2, BLACK);
+        return;
+    }
 }

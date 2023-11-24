@@ -20,6 +20,9 @@ typedef enum ShapeType
     ST_POINT,
     ST_LINE,
     ST_CIRCLE,
+    
+    ST_PARALLEL,
+
     ST_COUNT
 } ShapeType;
 
@@ -49,6 +52,13 @@ typedef struct Circle
     Point* perimeter_point;
 } Circle;
 
+typedef struct Parallel
+{
+    Shape base;
+    Line* line;
+    Point* point;
+} Parallel;
+
 /**
  * @brief Creates a point in the coordinate system
  * 
@@ -75,6 +85,15 @@ Line* line_create(CoordinateSystem* cs, Point* p1, Point* p2);
  * @return Circle* The created circle
  */
 Circle* circle_create(CoordinateSystem* cs, Point* center, Point* perimeter_point);
+/**
+ * @brief Creates a parallel line in the coordinate system
+ * 
+ * @param cs The coordinate system to create the parallel line in
+ * @param line The line to create the parallel line with
+ * @param point The point to the parallel line goes through
+ * @return Parallel* The created parallel line
+ */
+Parallel* parallel_create(CoordinateSystem* cs, Line* line, Point* point);
 
 void shape_draw(CoordinateSystem* cs, Shape* self);
 void shape_update(CoordinateSystem* cs, Shape* self);

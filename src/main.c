@@ -30,6 +30,7 @@
 void on_pointer_clicked(UIButton* self);
 void on_point_clicked(UIButton* self);
 void on_line_clicked(UIButton* self);
+void on_parallel_clicked(UIButton* self);
 void on_circle_clicked(UIButton* self);
 
 void on_open_button_clicked(UIButton* self);
@@ -52,6 +53,9 @@ typedef enum State
 
     STATE_CIRCLE,
     STATE_CIRCLE_CENTER_PLACED,
+
+    STATE_PARALLEL,
+    STATE_PARALLEL_LINE_SELECTED,
 
     STATE_OPENING,
     STATE_SAVEING
@@ -80,6 +84,7 @@ int main(void)
     ui_create_button(toolbar, constraints_from_string("10p c 100p 0.8r"), "Pointer", color_from_grayscale(80), WHITE, on_pointer_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Point", color_from_grayscale(80), WHITE, on_point_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Line", color_from_grayscale(80), WHITE, on_line_clicked);
+    ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Parallel", color_from_grayscale(80), WHITE, on_parallel_clicked);
     ui_create_button(toolbar, constraints_from_string("10o c 100p 0.8r"), "Circle", color_from_grayscale(80), WHITE, on_circle_clicked);
     
     UIContainer* menubar = ui_create_container(main_container, constraints_from_string("0p 0p 1r 30p"), NULL);
@@ -174,29 +179,54 @@ int main(void)
         case STATE_LINE:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                coordinate_system_deselect_shapes(cs);
-                coordinate_system_select_shape(cs, point);
-                coordinate_system_drag_selected_shapes(cs, true);
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, (Shape*)hovered_shape);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+                else
+                {
+                    Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
             }
             else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
+                Vector* shapes = coordinate_system_get_selected_shapes(cs);
+                Point* first_point = (Point*)vector_get(shapes, 0);
+                vector_free(shapes);
                 coordinate_system_drag_selected_shapes(cs, false);
                 coordinate_system_deselect_shapes(cs);
                 Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                line_create(cs, first_point, (Point*)placing_point);
                 coordinate_system_select_shape(cs, (Shape*)placing_point);
                 coordinate_system_drag_selected_shapes(cs, true);
-                line_create(cs, (Point*)vector_get(cs->shapes, vector_size(cs->shapes) - 2), (Point*)placing_point);
                 state = STATE_LINE_POINT1_PLACED;
             }
             break;
         case STATE_LINE_POINT1_PLACED:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                coordinate_system_deselect_shapes(cs);
-                Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
-                coordinate_system_select_shape(cs, (Shape*)placing_point);
-                coordinate_system_drag_selected_shapes(cs, true);
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && !hovered_shape->dragged && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_drag_selected_shapes(cs, false);
+                    coordinate_system_deselect_shapes(cs);
+                    Line* line = (Line*)vector_get(cs->shapes, vector_size(cs->shapes) - 1);
+                    line->p2 = (Point*)hovered_shape;
+                    coordinate_system_destroy_shape(cs, vector_get(cs->shapes, vector_size(cs->shapes) - 2));
+                }
+                else
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                    coordinate_system_select_shape(cs, (Shape*)placing_point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
             }
             else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
             {
@@ -216,29 +246,54 @@ int main(void)
         case STATE_CIRCLE:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
-                coordinate_system_deselect_shapes(cs);
-                coordinate_system_select_shape(cs, point);
-                coordinate_system_drag_selected_shapes(cs, true);
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, (Shape*)hovered_shape);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+                else
+                {
+                    Shape* point = (Shape*)point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
             }
             else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
+                Vector* shapes = coordinate_system_get_selected_shapes(cs);
+                Point* first_point = (Point*)vector_get(shapes, 0);
+                vector_free(shapes);
                 coordinate_system_drag_selected_shapes(cs, false);
                 coordinate_system_deselect_shapes(cs);
                 Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                circle_create(cs, first_point, (Point*)placing_point);
                 coordinate_system_select_shape(cs, (Shape*)placing_point);
                 coordinate_system_drag_selected_shapes(cs, true);
-                circle_create(cs, (Point*)vector_get(cs->shapes, vector_size(cs->shapes) - 2), (Point*)placing_point);
                 state = STATE_CIRCLE_CENTER_PLACED;
             }
             break;
         case STATE_CIRCLE_CENTER_PLACED:
             if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
             {
-                coordinate_system_deselect_shapes(cs);
-                Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
-                coordinate_system_select_shape(cs, (Shape*)placing_point);
-                coordinate_system_drag_selected_shapes(cs, true);
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && !hovered_shape->dragged && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_drag_selected_shapes(cs, false);
+                    coordinate_system_deselect_shapes(cs);
+                    Circle* circle = (Circle*)vector_get(cs->shapes, vector_size(cs->shapes) - 1);
+                    circle->perimeter_point = (Point*)hovered_shape;
+                    coordinate_system_destroy_shape(cs, vector_get(cs->shapes, vector_size(cs->shapes) - 2));
+                }
+                else
+                {                    
+                    coordinate_system_deselect_shapes(cs);
+                    Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                    coordinate_system_select_shape(cs, (Shape*)placing_point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
             }
             else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
             {
@@ -252,6 +307,66 @@ int main(void)
                 shape_destroy(cs, vector_pop_back(cs->shapes));
                 coordinate_system_deselect_shapes(cs);
                 state = STATE_CIRCLE;
+            }
+            break;
+        
+        case STATE_PARALLEL:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && hovered_shape->type == ST_LINE)
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    coordinate_system_select_shape(cs, (Shape*)hovered_shape);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Vector* shapes = coordinate_system_get_selected_shapes(cs);
+                Line* line = (Line*)vector_get(shapes, 0);
+                vector_free(shapes);
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                Point* placing_point = point_create(cs, screen_to_coordinates(cs, vector2_from_point(input_get_mouse_position())));
+                parallel_create(cs, line, (Point*)placing_point);
+                coordinate_system_select_shape(cs, (Shape*)placing_point);
+                coordinate_system_drag_selected_shapes(cs, true);
+                state = STATE_PARALLEL_LINE_SELECTED;
+            }
+            break;
+        case STATE_PARALLEL_LINE_SELECTED:
+            if (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position())))
+            {
+                Shape* hovered_shape = coordinate_system_get_hovered_shape(cs, vector2_from_point(input_get_mouse_position()));
+                if (hovered_shape != NULL && !hovered_shape->dragged && hovered_shape->type == ST_POINT)
+                {
+                    coordinate_system_drag_selected_shapes(cs, false);
+                    coordinate_system_deselect_shapes(cs);
+                    Parallel* parallel = (Parallel*)vector_get(cs->shapes, vector_size(cs->shapes) - 1);
+                    parallel->point = (Point*)hovered_shape;
+                    coordinate_system_destroy_shape(cs, vector_get(cs->shapes, vector_size(cs->shapes) - 2));
+                }
+                else
+                {
+                    coordinate_system_deselect_shapes(cs);
+                    Point* placing_point = vector_get(cs->shapes, vector_size(cs->shapes) - 2);
+                    coordinate_system_select_shape(cs, (Shape*)placing_point);
+                    coordinate_system_drag_selected_shapes(cs, true);
+                }
+            }
+            else if (input_is_mouse_button_released(SDL_BUTTON_LEFT))
+            {
+                coordinate_system_drag_selected_shapes(cs, false);
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_PARALLEL;
+            }
+            else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
+            {
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                shape_destroy(cs, vector_pop_back(cs->shapes));
+                coordinate_system_deselect_shapes(cs);
+                state = STATE_PARALLEL;
             }
             break;
 
@@ -325,6 +440,10 @@ void on_point_clicked(UIButton* self __attribute__((unused)))
 void on_line_clicked(UIButton* self __attribute__((unused)))
 {
     state = STATE_LINE;
+}
+void on_parallel_clicked(UIButton* self __attribute__((unused)))
+{
+    state = STATE_PARALLEL;
 }
 void on_circle_clicked(UIButton* self __attribute__((unused)))
 {

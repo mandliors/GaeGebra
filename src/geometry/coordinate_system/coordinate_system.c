@@ -316,16 +316,16 @@ void coordinate_system_draw(CoordinateSystem* cs)
         if (shape->type != ST_POINT)
             shape_draw(cs, shape);
     }
+    for (size_t i = 0; i < vector_size(cs->intersection_points); i++)
+    {
+        Point* point = vector_get(cs->intersection_points, i);
+        _intersection_point_draw(cs, point);
+    }
     for (size_t i = 0; i < vector_size(cs->shapes); i++)
     {
         Shape* shape = vector_get(cs->shapes, i);
         if (shape->type == ST_POINT)
             shape_draw(cs, shape);
-    }
-    for (size_t i = 0; i < vector_size(cs->intersection_points); i++)
-    {
-        Point* point = vector_get(cs->intersection_points, i);
-        _intersection_point_draw(cs, point);
     }
 }
 void coordinate_system_update_dimensions(CoordinateSystem* cs, Vector2 position, Vector2 size)
