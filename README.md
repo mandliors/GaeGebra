@@ -22,6 +22,10 @@ The are a number of shapes that can be created:
 - Point
 - Line
 - Circle
+- Parallel
+- Perpendicular
+- Angle Bisector
+- Tangent
 
 To create a one, call `[SHAPE]_create` with the name of the shape.
 The shape will be automatically freed in the end by the parent coordinate system.
