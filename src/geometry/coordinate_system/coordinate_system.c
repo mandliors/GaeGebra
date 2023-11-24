@@ -83,6 +83,34 @@ void coordinate_system_save(CoordinateSystem* cs, const char* path)
             fprintf(file, "circle %d %d\n", idx1, idx2);
             break;
         }
+        case ST_PARALLEL:
+        {
+            int idx1 = vector_index_of(cs->shapes, ((Parallel*)shape)->line);
+            int idx2 = vector_index_of(cs->shapes, ((Parallel*)shape)->point);
+            fprintf(file, "parallel %d %d\n", idx1, idx2);
+            break;
+        }
+        case ST_PERPENDICULAR:
+        {
+            int idx1 = vector_index_of(cs->shapes, ((Perpendicular*)shape)->line);
+            int idx2 = vector_index_of(cs->shapes, ((Perpendicular*)shape)->point);
+            fprintf(file, "perpendicular %d %d\n", idx1, idx2);
+            break;
+        }
+        case ST_ANGLE_BISECTOR:
+        {
+            int idx1 = vector_index_of(cs->shapes, ((AngleBisector*)shape)->line1);
+            int idx2 = vector_index_of(cs->shapes, ((AngleBisector*)shape)->line1);
+            fprintf(file, "bisector %d %d\n", idx1, idx2);
+            break;
+        }
+        case ST_TANGENT:
+        {
+            int idx1 = vector_index_of(cs->shapes, ((Tangent*)shape)->circle);
+            int idx2 = vector_index_of(cs->shapes, ((Tangent*)shape)->point);
+            fprintf(file, "tangent %d %d\n", idx1, idx2);
+            break;
+        }
         default:
             break;
         }
@@ -108,17 +136,22 @@ CoordinateSystem* coordinate_system_load(const char* path)
             double y = atof(strtok(NULL, " "));
             point_create(cs, vector2_create(x, y));
         }
-        else if (strcmp(type, "line") == 0)
+        else
         {
             int idx1 = atoi(strtok(NULL, " "));
             int idx2 = atoi(strtok(NULL, " "));
-            line_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
-        }
-        else if (strcmp(type, "circle") == 0)
-        {
-            int idx1 = atoi(strtok(NULL, " "));
-            int idx2 = atoi(strtok(NULL, " "));
-            circle_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
+            if (strcmp(type, "line") == 0)
+                line_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
+            if (strcmp(type, "circle") == 0)
+                circle_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
+            if (strcmp(type, "parallel") == 0)
+                parallel_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
+            if (strcmp(type, "perpendicular") == 0)
+                perpendicular_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
+            if (strcmp(type, "bisector") == 0)
+                angle_bisector_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
+            if (strcmp(type, "tangent") == 0)
+                tangent_create(cs, vector_get(cs->shapes, idx1), vector_get(cs->shapes, idx2));
         }
     }
     fclose(file);
