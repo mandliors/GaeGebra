@@ -377,8 +377,7 @@ void coordinate_system_destroy_shape(CoordinateSystem* cs, Shape* shape)
         Shape* shp = vector_get(cs->shapes, i);
         if (shape_is_defined_by(shp, shape))
         {
-            shape_destroy(cs, shp);
-            vector_remove(cs->shapes, shp);
+            coordinate_system_destroy_shape(cs, shp);
             i--;
         }
     }

@@ -131,9 +131,6 @@ int main(void)
     cs = coordinate_system_create(vector2_create(canvas->base.position.x, canvas->base.position.y),
                                   vector2_create(canvas->base.size.x, canvas->base.size.y),
                                   vector2_create(0.5, 0.5));
-    point_create(cs, vector2_create(-12, 2));
-    line_create(cs, point_create(cs, vector2_create(-10, 10)), point_create(cs, vector2_create(-2, 2)));
-    circle_create(cs, point_create(cs, vector2_create(2, 1)), point_create(cs, vector2_create(5, 1)));
 
     while (!window->close_requested)
     {
@@ -489,13 +486,13 @@ int main(void)
             {
                 coordinate_system_drag_selected_shapes(cs, false);
                 coordinate_system_deselect_shapes(cs);
-                state = STATE_PERPENDICULAR;
+                state = STATE_ANGLE_BISECTOR;
             }
             else if (input_is_key_released(SDL_SCANCODE_ESCAPE) || (input_is_mouse_button_pressed(SDL_BUTTON_LEFT) && !coordinate_system_is_hovered(cs, vector2_from_point(input_get_mouse_position()))))
             {
                 shape_destroy(cs, vector_pop_back(cs->shapes));
                 coordinate_system_deselect_shapes(cs);
-                state = STATE_PERPENDICULAR;
+                state = STATE_ANGLE_BISECTOR;
             }
             break;
         
@@ -606,10 +603,10 @@ int main(void)
         renderer_clear(WHITE);
         coordinate_system_draw(cs);
         
-        //fps (temporary)
-        static char buffer[10];
-        sprintf(buffer, "Fps: %.0lf", 1.0 / app_get_delta_time());
-        renderer_draw_text(buffer, 10, 90, BLACK);
+        //fps (temporary)ö
+        //static char buffer[10];
+        //sprintf(buffer, "Fps: %.0lf", 1.0 / app_get_delta_time());
+        //renderer_draw_text(buffer, 10, 90, BLACK);
 
         app_render();
     }
