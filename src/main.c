@@ -3,7 +3,7 @@
  * @author Örs Mándli (mandliors@gmail.com)
  * @brief This is the entry point of the application.
  * @version 0.1
- * @date 2023-11-05
+ * @date 2023-11-25
  * 
  * @copyright Copyright (c) 2023
  */

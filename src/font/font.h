@@ -7,7 +7,7 @@
 #endif
 
 /**
- * @brief Holds an TTF_Font and its size
+ * @brief Holds a TTF_Font and its size
  */
 typedef struct Font
 {
