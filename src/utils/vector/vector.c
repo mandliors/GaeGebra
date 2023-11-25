@@ -42,6 +42,12 @@ void* vector_get(Vector* vector, size_t idx)
 		return NULL;
 	return vector->data[idx];
 }
+void vector_set(Vector* vector, size_t idx, void* value)
+{
+	if (vector == NULL || idx >= vector->size)
+		return;
+	vector->data[idx] = value;
+}
 void vector_push_back(Vector* vector, void* value)
 {
 	if (vector == NULL)

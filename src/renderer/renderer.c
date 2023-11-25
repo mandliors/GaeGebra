@@ -146,10 +146,6 @@ void renderer_draw_pie(int x, int y, int radius, int start, int end, Color color
 {
 	pieRGBA(target_renderer, x, y, radius, start, end, color.r, color.g, color.b, color.a);
 }
-void renderer_draw_filled_pie(int x, int y, int radius, int start, int end, Color color)
-{
-	filledPieRGBA(target_renderer, x, y, radius, start, end, color.r, color.g, color.b, color.a);
-}
 void renderer_draw_bezier(const short* vx, const short* vy, int n, int s, Color color)
 {
 	bezierRGBA(target_renderer, vx, vy, n, s, color.r, color.g, color.b, color.a);

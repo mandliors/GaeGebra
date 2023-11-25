@@ -20,6 +20,7 @@ Vector2 vector2_negate(Vector2 a) { return (Vector2){-a.x, -a.y}; }
 Vector2 vector2_multiply(Vector2 a, Vector2 b) { return (Vector2){a.x * b.x, a.y * b.y}; }
 Vector2 vector2_divide(Vector2 a, Vector2 b) { return (Vector2){a.x / b.x, a.y / b.y}; }
 double vector2_dot(Vector2 a, Vector2 b) { return a.x * b.x + a.y * b.y; }
+double vector2_cross(Vector2 a, Vector2 b) { return a.x * b.y - a.y * b.x; }
 double vector2_length(Vector2 a) { return sqrt(vector2_dot(a, a)); }
 double vector2_distance(Vector2 a, Vector2 b) { return vector2_length(vector2_subtract(a, b)); }
 double vector2_angle(Vector2 a) { return atan2(a.y, a.x); }
