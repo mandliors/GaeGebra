@@ -5,4 +5,5 @@ docs/html
 docs/latex
 project_stats
 stats.sh
+docs.sh
 Doxyfile
