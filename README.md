@@ -1,5 +1,5 @@
 # Documentation
-GaeGebra is a coordinate geometry application inspired by GeoGebra. Written in C99 using SDL2.
+GaeGebra is a coordinate geometry application inspired by GeoGebra. It was written in C99 using SDL2 and uses the AddressSanitizer.
 Here is a short documentation, but if you want to dive deeper into the source code, you can find a pdf in the docs folder that contains a short description about the functions and structures.
 # Coordinate geomertry
 ## Coordinate system
