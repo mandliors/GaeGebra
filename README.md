@@ -1,7 +1,7 @@
 # Documentation
 GaeGebra is a coordinate geometry application inspired by GeoGebra. It was written in C99 using SDL2 and uses the AddressSanitizer.
 Here is a short documentation, but if you want to dive deeper into the source code, you can find a pdf in the docs folder that contains a short description about the functions and structures.
-# Coordinate geomertry
+# Coordinate geometry
 ## Coordinate system
 The first step is to create a coordinate system with `coordinate_system_create`.
 Then you can add shapes to it that will be stored and freed in the end.
